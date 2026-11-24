@@ -33,6 +33,63 @@ async function assertNoOverflow(page,label){
   }));
   assert(diagnostic.root<=diagnostic.viewport+1,label+' horizontal overflow: '+JSON.stringify(diagnostic));
 }
+
+async function verifyInteractiveFlow(page,label){
+  const report=await page.evaluate(()=>{
+    const errors=[];let branches=0,choices=0;
+    const check=(ok,msg)=>{if(!ok)errors.push(msg)};
+    const visible=n=>!!n&&n.getClientRects().length>0;
+    const click=n=>{if(!n){errors.push('missing control');return}n.click()};
+    for(const explorer of document.querySelectorAll('#detailView [data-flow-explorer]')){
+      const nodes=[...explorer.querySelectorAll('.algo-branch[data-flow-path]')];
+      const byPath=new Map(nodes.map(n=>[n.dataset.flowPath,n]));
+      const body=n=>n.querySelector(':scope > .branch-content');
+      const button=n=>n.querySelector(':scope > .flow-option');
+      const control=key=>explorer.querySelector('[data-flow-action="'+key+'"]');
+      check(nodes.every(n=>!visible(body(n))),'initial outcomes not concealed');
+      for(const node of nodes){
+        click(control('reset'));
+        const path=node.dataset.flowPath.split('.');
+        for(let i=0;i<path.length;i++){
+          const target=byPath.get(path.slice(0,i+1).join('.'));
+          check(visible(button(target)),'choice not reachable '+target.dataset.flowPath);click(button(target));
+        }
+        branches++;
+        check(visible(body(node)),'selected body hidden '+node.dataset.flowPath);
+        const selected=node.dataset.flowPath;
+        for(const other of nodes){
+          const key=other.dataset.flowPath;
+          const shouldShow=selected===key||selected.startsWith(key+'.');
+          check(visible(body(other))===shouldShow,'unexpected outcome '+key+' selected '+selected);
+        }
+        click(control('back'));
+        check(visible(button(node))&&!visible(body(node)),'back did not restore choice '+selected);
+      }
+      click(control('reset'));click(control('full'));
+      check(nodes.every(n=>visible(body(n))),'full view missing source branch');
+      click(control('full'));
+      check(nodes.every(n=>!visible(body(n))),'guided restore failed');
+    }
+    for(const group of document.querySelectorAll('#detailView [data-flow-choice]')){
+      const outcomes=[...group.querySelectorAll('[data-choice-result]')];
+      const select=key=>group.querySelector('[data-choice-select="'+key+'"]');
+      const control=key=>group.querySelector('[data-choice-action="'+key+'"]');
+      check(outcomes.every(n=>!visible(n)),'initial choice not concealed');
+      for(const answer of ['yes','no']){
+        click(select(answer));choices++;
+        check(outcomes.every(n=>visible(n)===(n.dataset.choiceResult===answer)),'choice isolation '+answer);
+        click(control('back'));
+        check(outcomes.every(n=>!visible(n)),'choice back failed');
+      }
+      click(control('full'));check(outcomes.every(visible),'full binary choices missing');click(control('full'));
+      check(outcomes.every(n=>!visible(n)),'binary guided restore failed');
+    }
+    return {errors,branches,choices};
+  });
+  assert.deepEqual(report.errors,[],label+' interactive flow');
+  return report;
+}
+
 try{
   for(const viewport of [{name:'mobile',width:390,height:844},{name:'desktop',width:1280,height:900}]){
     const context=await browser.newContext({viewport:{width:viewport.width,height:viewport.height},colorScheme:'light',reducedMotion:'reduce'});
@@ -88,6 +145,7 @@ try{
     const protocolIds=await page.locator('#protocolGrid [data-protocol-open]').evaluateAll(nodes=>nodes.map(n=>n.dataset.protocolOpen));
     assert.equal(catalog.length,37);assert.equal(protocolIds.length,2);
     for(const theme of ['dark','light']){
+      let branchCount=0,choiceCount=0;
       if(await page.locator('html').getAttribute('data-theme')!==theme)await page.locator('#themeToggle').click();
       await page.locator('[data-nav="cases"]').click();
       for(const caseId of catalog){
@@ -106,6 +164,7 @@ try{
           return {critical:arrEq(all('#critical-actions li').map(text),c.criticalActions),warnings:arrEq(all('.red-flag').map(text),c.warningFindings),medNames:arrEq(all('.med-main strong').map(text),(c.meds||[]).map(m=>m.name)),medDoses:arrEq(all('.dose-panel .dose').map(text),(c.meds||[]).map(m=>m.dose)),branches:all('.algo-branch').length===branches(c.algorithmBranches||[]),steps:all('.quick-steps>.quick-step').length===(Array.isArray(c.algorithmSteps)?c.algorithmSteps:(c.quick||[])).length};
         },caseId);
         assert(Object.values(fidelity).every(Boolean),caseId+' fidelity '+JSON.stringify(fidelity));
+        const interactive=await verifyInteractiveFlow(page,caseId+' '+theme+' '+viewport.name);branchCount+=interactive.branches;choiceCount+=interactive.choices;
         const style=await page.locator('.detail-section').first().evaluate(n=>getComputedStyle(n).borderRadius);
         assert.equal(style,'24px',caseId+' workspace style');
         await assertNoOverflow(page,theme+' '+caseId+' standard '+viewport.name);
@@ -131,12 +190,14 @@ try{
         assert(await page.locator('#source').isVisible());
         const protocolFidelity=await page.evaluate(id=>{const p=PROTOCOLS.find(x=>x.id===id);return document.querySelectorAll('#protocol-flow .protocol-flow-step').length===p.flow.filter(x=>x.type==='step').length&&document.querySelectorAll('#protocol-flow .protocol-decision').length===p.flow.filter(x=>x.type==='decision').length&&document.querySelectorAll('#protocol-flow .protocol-transition').length===p.flow.filter(x=>x.type==='transition').length},protocolId);
         assert(protocolFidelity,protocolId+' flow fidelity');
+        const interactive=await verifyInteractiveFlow(page,protocolId+' '+theme+' '+viewport.name);branchCount+=interactive.branches;choiceCount+=interactive.choices;
         await assertNoOverflow(page,theme+' '+protocolId+' '+viewport.name);
         await page.locator('.back-btn').click();
         await page.locator('#mainView:not(.hidden)').waitFor();
       }
       await page.locator('[data-nav="home"]').click();
-      console.log('PASS '+viewport.name+' '+theme+': all 37 cases + 2 protocols');
+      assert(branchCount>30&&choiceCount>30,'Interactive catalog coverage insufficient');
+      console.log('PASS '+viewport.name+' '+theme+': all 37 cases + 2 protocols; '+branchCount+' branch selections; '+choiceCount+' binary outcomes; back/full view');
     }
     if(await page.locator('html').getAttribute('data-theme')!=='dark')await page.locator('#themeToggle').click();
     await page.locator('#sourceBtn').click();

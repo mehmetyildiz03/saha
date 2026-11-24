@@ -33,8 +33,8 @@ for(const [fg,bg] of [['green','greenSoft'],['amber','amberSoft'],['red','redSof
 assert(!html.includes('17 doğrulanmış yetişkin vaka'),'Hero içinde statik vaka sayısı kalmış');
 assert(html.indexOf('id="populationTabs"')>html.indexOf('</header>'),'Hasta grubu sekmeleri sticky header içinde olmamalı');
 assert(html.includes('class="library-strip"'),'Kompakt kütüphane özeti eksik');
-assert(html.includes('saha-design.css?v=3.0.1')&&!html.includes('./styles.css?')&&html.includes('app-core.js?v=3.0.1')&&html.includes('cases-data.js?v=0.59.10'),'Kritik asset cache-bust sürümü eksik');
-assert(sw.includes("saha-next-v301")&&sw.includes("CACHE_PREFIX='saha-next-'")&&sw.includes("k.startsWith(CACHE_PREFIX)&&k!==CACHE")&&sw.includes('NETWORK_FIRST_DESTINATIONS'),'Service worker güncelleme/cache izolasyon stratejisi eksik');
+assert(html.includes('saha-design.css?v=3.1.0')&&!html.includes('./styles.css?')&&html.includes('app-core.js?v=3.1.0')&&html.includes('cases-data.js?v=0.59.10'),'Kritik asset cache-bust sürümü eksik');
+assert(sw.includes("saha-next-v310")&&sw.includes("CACHE_PREFIX='saha-next-'")&&sw.includes("k.startsWith(CACHE_PREFIX)&&k!==CACHE")&&sw.includes('NETWORK_FIRST_DESTINATIONS'),'Service worker güncelleme/cache izolasyon stratejisi eksik');
 assert(!app.includes('Kırmızı bayrak'),'Eski kullanıcı terimi hâlâ UI içinde');
 assert(app.includes('Acil Uyarı Bulguları'),'Acil Uyarı Bulguları başlığı eksik');
 assert(app.includes('Önceliği, müdahaleyi veya nakil kararını değiştirebilecek bulgular.'),'Acil uyarı açıklaması eksik');
@@ -233,7 +233,7 @@ try{
 
 
 // V3 contract replaces historical exact CSS snapshots; clinical data and runtime contracts remain.
-assert(html.includes('./saha-design.css?v=3.0.1')&&!html.includes('./styles.css?')&&!sw.includes('./styles.css?'),'Legacy UI CSS must not load');
+assert(html.includes('./saha-design.css?v=3.1.0')&&!html.includes('./styles.css?')&&!sw.includes('./styles.css?'),'Legacy UI CSS must not load');
 assert(app.includes('workspace-brand')&&app.includes('workspace-overview')&&app.includes('dose-panel')&&app.includes('step-marker')&&app.includes('branch-glyph'),'New clinical workspace DOM absent');
 assert(app.includes('sourceFocusable')&&app.includes("e.key==='Tab'")&&css.includes('html.dialog-open'),'Dialog focus and scroll lock');
 assert(app.includes('function updateActiveDetailJump()')&&app.includes("aria-current','location'")&&css.includes('.jump-chip.active-section:not(.mode-switch)'),'Active jump');
@@ -268,4 +268,9 @@ assert((app.match(/\$\{modeContextBanner\(\)\}/g)||[]).length===2,'Mod bilgi ban
 
 
 
+assert(app.includes('data-flow-select')&&app.includes('data-flow-trail')&&app.includes('data-choice-result')&&app.includes('function updateFlowExplorer')&&app.includes('function updateChoiceGroup'),'Interactive explorer missing');
+assert(app.includes('persistFlowState')&&app.includes('initializeFlowViews({restore:!browserHistory})'),'Detail history flow restoration missing');
+assert(css.includes('[hidden]{display:none!important}')&&css.includes('.flow-option:focus-visible'),'Hidden branch and focus semantics missing');
 if(errors.length){for(const e of errors)console.error('ERROR '+e);process.exit(1)}
+
+// Interactive flow contract: no source branching or outcome text is synthesized.

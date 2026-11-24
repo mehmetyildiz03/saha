@@ -8,8 +8,8 @@ const html=fs.readFileSync('index.html','utf8');
 const css=fs.readFileSync('saha-design.css','utf8');
 const sw=fs.readFileSync('sw.js','utf8');
 const app=fs.readFileSync('app-core.js','utf8');
-assert(html.includes('./saha-design.css?v=3.0.1')&&!html.includes('./styles.css?'));
-assert(sw.includes('./saha-design.css?v=3.0.1'));
+assert(html.includes('./saha-design.css?v=3.1.0')&&!html.includes('./styles.css?'));
+assert(sw.includes('./saha-design.css?v=3.1.0'));
 assert(sw.includes("CACHE_PREFIX='saha-next-'"));
 assert(app.includes("'saha112-saha:favs'"));
 assert(css.includes('prefers-reduced-motion')&&css.includes('data-theme=dark'));
@@ -20,3 +20,5 @@ assert(app.includes('el.shell.dataset.page=name')&&css.includes('.app-shell[data
 assert(app.includes('workspace-brand')&&app.includes('dose-panel')&&app.includes('step-marker')&&css.includes('.workspace-overview'));
 assert(css.includes('--rail:228px')&&css.includes('grid-template-columns:repeat(3,minmax(0,1fr))'));
 console.log('PASS: clinical source byte identity, design linkage, isolated cache and storage, responsive and accessible theme hooks.');
+
+assert(app.includes('data-flow-explorer')&&app.includes('data-flow-choice')&&css.includes('.flow-option')&&css.includes('.flow-choice-button'),'Interactive flow design missing');
