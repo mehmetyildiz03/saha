@@ -6,6 +6,7 @@ on:
   workflow_dispatch:
 
 permissions:
+  actions: read
   contents: read
   pages: write
   id-token: write
@@ -104,9 +105,11 @@ jobs:
         env:
           PAGE_URL: ${{ steps.deployment.outputs.page_url }}
         run: |
+          EXPECTED_TITLE=$(sed -n 's/.*<title>\(.*\)<\/title>.*/\1/p' index.html)
+          test -n "$EXPECTED_TITLE"
           for attempt in $(seq 1 20); do
-            if curl -fsSL --max-time 15 -H 'Cache-Control: no-cache' "${PAGE_URL%/}/?release=$GITHUB_SHA-$attempt" | grep -F 'Saha112 — V3.0.1'; then
-              echo "Live release confirmed: V3.0.1"
+            if curl -fsSL --max-time 15 -H 'Cache-Control: no-cache' "${PAGE_URL%/}/?release=$GITHUB_SHA-$attempt" | grep -F "$EXPECTED_TITLE"; then
+              echo "Live release confirmed: $EXPECTED_TITLE"
               exit 0
             fi
             sleep 3
