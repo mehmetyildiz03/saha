@@ -72,6 +72,9 @@ try{
     await page.locator('[data-density-toggle]').click();
     assert.equal(await page.locator('html').getAttribute('data-density'),'compact');
     await page.locator('[data-density-toggle]').click();
+    await page.locator('.workspace-theme').click();
+    assert.equal(await page.locator('html').getAttribute('data-theme'),'dark');
+    await page.locator('.workspace-theme').click();
     await page.locator('.back-btn').click();
     await page.locator('#mainView:not(.hidden)').waitFor();
     await page.locator('[data-nav="favorites"]').click();
@@ -80,6 +83,44 @@ try{
     await page.locator('#themeToggle').click();
     assert.equal(await page.locator('html').getAttribute('data-theme'),'dark');
     await page.screenshot({path:path.join(output,viewport.name+'-dark.png'),fullPage:false});
+    // Whole-catalog clinical view acceptance, not just the first card.
+    const catalog=await page.locator('#caseList [data-open]').evaluateAll(nodes=>nodes.map(n=>n.dataset.open));
+    const protocolIds=await page.locator('#protocolGrid [data-protocol-open]').evaluateAll(nodes=>nodes.map(n=>n.dataset.protocolOpen));
+    assert.equal(catalog.length,37);assert.equal(protocolIds.length,2);
+    for(const theme of ['dark','light']){
+      if(await page.locator('html').getAttribute('data-theme')!==theme)await page.locator('#themeToggle').click();
+      await page.locator('[data-nav="cases"]').click();
+      for(const caseId of catalog){
+        await page.locator('#caseList [data-open="'+caseId+'"]').click();
+        await page.locator('#detailView:not(.hidden) .workspace-brand').waitFor();
+        assert.equal(await page.locator('#detailView').getAttribute('data-design'),'workspace-v3');
+        assert(await page.locator('.workspace-overview').isVisible());
+        assert(await page.locator('#critical-actions').isVisible());
+        assert(await page.locator('#algorithm').isVisible());
+        assert(await page.locator('#source').isVisible());
+        const style=await page.locator('.detail-section').first().evaluate(n=>getComputedStyle(n).borderRadius);
+        assert.equal(style,'24px',caseId+' workspace style');
+        await assertNoOverflow(page,theme+' '+caseId+' standard '+viewport.name);
+        if(await page.locator('#medications').count())assert(await page.locator('.dose-panel').first().isVisible());
+        await page.locator('[data-density-toggle]').click();
+        assert.equal(await page.locator('html').getAttribute('data-density'),'compact');
+        await assertNoOverflow(page,theme+' '+caseId+' field '+viewport.name);
+        await page.locator('[data-density-toggle]').click();
+        await page.locator('.back-btn').click();
+        await page.locator('#mainView:not(.hidden)').waitFor();
+      }
+      for(const protocolId of protocolIds){
+        await page.locator('#protocolGrid [data-protocol-open="'+protocolId+'"]').click();
+        assert(await page.locator('.workspace-brand').isVisible());
+        assert(await page.locator('#protocol-flow').isVisible());
+        await assertNoOverflow(page,theme+' '+protocolId+' '+viewport.name);
+        await page.locator('.back-btn').click();
+        await page.locator('#mainView:not(.hidden)').waitFor();
+      }
+      await page.locator('[data-nav="home"]').click();
+      console.log('PASS '+viewport.name+' '+theme+': all 37 cases + 2 protocols');
+    }
+    if(await page.locator('html').getAttribute('data-theme')!=='dark')await page.locator('#themeToggle').click();
     await page.locator('#sourceBtn').click();
     await page.locator('#sourceSheet:not(.hidden)').waitFor();
     await page.keyboard.press('Escape');

@@ -66,7 +66,7 @@ jobs:
       - name: Prepare static release
         run: |
           mkdir _site
-          cp index.html styles.css saha-design.css cases-data.js app-core.js sw.js manifest.webmanifest icon.svg icon-192.png icon-512.png apple-touch-icon.png .nojekyll _site/
+          cp index.html saha-design.css cases-data.js app-core.js sw.js manifest.webmanifest icon.svg icon-192.png icon-512.png apple-touch-icon.png .nojekyll _site/
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4
         with:
