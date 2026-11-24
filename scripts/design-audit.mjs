@@ -10,7 +10,7 @@ const sw=fs.readFileSync('sw.js','utf8');
 const app=fs.readFileSync('app-core.js','utf8');
 assert(html.includes('./saha-design.css?v=1.0.0'));
 assert(sw.includes('./saha-design.css?v=1.0.0'));
-assert(sw.includes("CACHE_PREFIX='saha112-saha-'"));
+assert(sw.includes("CACHE_PREFIX='saha-next-'"));
 assert(app.includes("'saha112-saha:favs'"));
 assert(css.includes('prefers-reduced-motion')&&css.includes('data-theme=dark'));
 assert(html.includes('data-action="show-all"'));

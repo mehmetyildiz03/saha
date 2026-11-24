@@ -43,7 +43,7 @@ assert(css.includes(":root[data-theme='dark'] .quick-step")&&css.includes("backg
 assert(css.includes(":root[data-theme='dark'] .red-flag")&&css.includes("background:#2b202a!important"),'Koyu mod kırmızı bayrak yüzeyi eksik');
 assert(css.includes(":root[data-theme='dark'] .branch.yes")&&css.includes(":root[data-theme='dark'] .branch.no"),'Koyu mod karar kutuları explicit değil');
 assert(html.includes('styles.css?v=0.59.10')&&html.includes('app-core.js?v=0.59.10')&&html.includes('cases-data.js?v=0.59.10'),'Kritik asset cache-bust sürümü eksik');
-assert(sw.includes("saha112-saha-v100")&&sw.includes("CACHE_PREFIX='saha112-saha-'")&&sw.includes("k.startsWith(CACHE_PREFIX)&&k!==CACHE")&&sw.includes('NETWORK_FIRST_DESTINATIONS'),'Service worker güncelleme/cache izolasyon stratejisi eksik');
+assert(sw.includes("saha-next-v100")&&sw.includes("CACHE_PREFIX='saha-next-'")&&sw.includes("k.startsWith(CACHE_PREFIX)&&k!==CACHE")&&sw.includes('NETWORK_FIRST_DESTINATIONS'),'Service worker güncelleme/cache izolasyon stratejisi eksik');
 assert(!app.includes('Kırmızı bayrak'),'Eski kullanıcı terimi hâlâ UI içinde');
 assert(app.includes('Acil Uyarı Bulguları'),'Acil Uyarı Bulguları başlığı eksik');
 assert(app.includes('Önceliği, müdahaleyi veya nakil kararını değiştirebilecek bulgular.'),'Acil uyarı açıklaması eksik');
