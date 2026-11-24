@@ -1,6 +1,6 @@
 const CACHE_PREFIX='saha-next-';
-const CACHE='saha-next-v300';
-const CORE=['./','./index.html','./saha-design.css?v=3.0.0','./cases-data.js?v=0.59.10','./app-core.js?v=3.0.0','./manifest.webmanifest?v=3.0.0','./icon.svg','./icon-192.png','./icon-512.png','./apple-touch-icon.png'];
+const CACHE='saha-next-v301';
+const CORE=['./','./index.html','./saha-design.css?v=3.0.1','./cases-data.js?v=0.59.10','./app-core.js?v=3.0.1','./manifest.webmanifest?v=3.0.1','./icon.svg','./icon-192.png','./icon-512.png','./apple-touch-icon.png'];
 const NETWORK_FIRST_DESTINATIONS=new Set(['style','script','manifest']);
 self.addEventListener('install',event=>event.waitUntil(caches.open(CACHE).then(cache=>cache.addAll(CORE)).then(()=>self.skipWaiting())));
 self.addEventListener('activate',event=>event.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k.startsWith(CACHE_PREFIX)&&k!==CACHE).map(k=>caches.delete(k)))).then(()=>self.clients.claim())));

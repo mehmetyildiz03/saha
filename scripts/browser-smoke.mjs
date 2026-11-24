@@ -114,6 +114,11 @@ try{
         assert.equal(await page.locator('html').getAttribute('data-density'),'compact');
         assert.equal(await page.locator('#critical-actions').evaluate(n=>getComputedStyle(n).order),'10');
         assert.equal(await page.locator('#algorithm').evaluate(n=>getComputedStyle(n).order),'20');
+        const ordering=await page.locator('.detail-body').evaluate(n=>[...n.children].map(x=>x.id||x.className));
+        assert.equal(ordering[0],'critical-actions');
+        assert.equal(ordering[1],'algorithm');
+        const visual=await page.evaluate(()=>document.querySelector('#critical-actions').getBoundingClientRect().top<document.querySelector('#algorithm').getBoundingClientRect().top);
+        assert(visual,'Critical steps must visually precede algorithm');
         await assertNoOverflow(page,theme+' '+caseId+' field '+viewport.name);
         await page.locator('[data-density-toggle]').click();
         await page.locator('.back-btn').click();

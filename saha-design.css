@@ -53,7 +53,7 @@ button:active:not(:disabled){transform:translateY(2px);box-shadow:none}
 
 .theme-button .saha-theme-sun{display:none}:root[data-theme=dark] .theme-button .saha-theme-sun{display:block}:root[data-theme=dark] .theme-button .saha-theme-moon{display:none}
 
-/* V3.0.0: contain intrinsic layout sizing, not page overflow. */
+/* V3.0.1: contain intrinsic layout sizing, not page overflow. */
 .app-shell,.topbar,.context-panel,.main-view,.detail-view,.detail-body{min-width:0;width:100%;max-width:100%}
 .app-shell{max-width:1440px}
 .detail-view{max-width:960px}
@@ -115,3 +115,9 @@ button:active:not(:disabled){transform:translateY(2px);box-shadow:none}
 
 /* Avoid deeply nested action content shrinking on phones; retain branch nesting with left rail. */
 @media(max-width:440px){.algo-branch-children{gap:10px;margin-left:0}.algo-depth-2,.algo-depth-3{padding:6px!important}.algo-depth-2 .algo-step,.algo-depth-3 .algo-step{grid-template-columns:minmax(0,1fr);gap:3px}.algo-depth-2 .step-marker,.algo-depth-3 .step-marker{margin:0;width:24px;height:24px}.algo-depth-2 .algo-step:after,.algo-depth-3 .algo-step:after{display:none}}
+
+/* Explicit workspace mode contract. DOM order is synchronized in app-core.js. */
+html[data-density="compact"] #detailView #critical-actions{order:10}
+html[data-density="compact"] #detailView #algorithm{order:20}
+html[data-density="compact"] #detailView .detail-columns{order:40}
+html[data-density="compact"] #detailView #medications{order:50}
