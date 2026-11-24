@@ -21,3 +21,14 @@ node scripts/design-audit.mjs
 ```
 
 Kaynak geçmişi: [SOURCE-HISTORY.md](SOURCE-HISTORY.md).
+
+## Tarayıcı testi ve yayın
+GitHub Pages ayarındaki **Source → GitHub Actions** seçimi, doğrulama başarılı olmadan yayın yapılmamasını sağlar. Main/root ile de statik dosyalar açılır ancak o modda test kapısı yayın için zorunlu değildir.
+
+Node.js 24 ve Playwright 1.65.1 yalnız geliştirme/QA ortamında kullanılır. Ürün çalışırken npm veya CDN bağımlılığı yoktur. Tarayıcı testi mobil ve masaüstü arama, vaka detayı, favori, tema, Hızlı Saha, kaynak penceresi ve çevrimdışı yeniden yükleme davranışını doğrular; ekran görüntülerini Actions artifact olarak kaydeder.
+
+```sh
+npm install --no-save --no-package-lock playwright@1.65.1
+npx playwright install chromium
+node scripts/browser-smoke.mjs
+```

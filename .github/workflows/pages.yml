@@ -17,25 +17,40 @@ concurrency:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-      - name: Runtime info
-        run: node --version
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '24'
+          package-manager-cache: false
       - name: Build PWA icons
         run: python3 scripts/build_icons.py
-      - name: JavaScript syntax
+      - name: Source integrity and syntax
         run: |
           node --check cases-data.js
           node --check app-core.js
           node --check sw.js
-      - name: Clinical content and PWA QA
-        run: node scripts/validate.mjs
-      - name: UI contrast and hierarchy audit
-        run: |
+          node scripts/validate.mjs
           node scripts/ui-audit.mjs
           node scripts/design-audit.mjs
-
+      - name: Install pinned browser test tooling
+        run: |
+          npm install --no-save --no-package-lock playwright@1.65.1
+          npx playwright install --with-deps chromium
+      - name: Mobile and desktop browser tests
+        env:
+          SAHA_SCREENSHOTS: ${{ runner.temp }}/saha-screenshots
+        run: node scripts/browser-smoke.mjs
+      - name: Upload visual test screenshots
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: saha-browser-screenshots
+          path: ${{ runner.temp }}/saha-screenshots
+          if-no-files-found: ignore
   deploy:
     needs: validate
     environment:
@@ -43,16 +58,19 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-      - name: Build PWA icons
-        run: python3 scripts/build_icons.py
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Configure Pages
         uses: actions/configure-pages@v5
+      - name: Prepare static release
+        run: |
+          mkdir _site
+          cp index.html styles.css saha-design.css cases-data.js app-core.js sw.js manifest.webmanifest icon.svg icon-192.png icon-512.png apple-touch-icon.png .nojekyll _site/
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v4
         with:
-          path: .
+          path: _site
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
