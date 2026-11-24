@@ -98,12 +98,22 @@ try{
         assert(await page.locator('#critical-actions').isVisible());
         assert(await page.locator('#algorithm').isVisible());
         assert(await page.locator('#source').isVisible());
+        const fidelity=await page.evaluate(id=>{
+          const c=CASES.find(x=>x.id===id), text=(el)=>el.textContent.trim(), all=s=>[...document.querySelectorAll('#detailView '+s)];
+          const normalize=s=>String(s??'').replace(/\s+/g,' ').trim();
+          const arrEq=(a,b)=>JSON.stringify(a.map(normalize))===JSON.stringify(b.map(normalize));
+          const branches=b=>b.reduce((n,x)=>n+1+branches(x.branches||[]),0);
+          return {critical:arrEq(all('#critical-actions li').map(text),c.criticalActions),warnings:arrEq(all('.red-flag').map(text),c.warningFindings),medNames:arrEq(all('.med-main strong').map(text),(c.meds||[]).map(m=>m.name)),medDoses:arrEq(all('.dose-panel .dose').map(text),(c.meds||[]).map(m=>m.dose)),branches:all('.algo-branch').length===branches(c.algorithmBranches||[]),steps:all('.quick-steps>.quick-step').length===(Array.isArray(c.algorithmSteps)?c.algorithmSteps:(c.quick||[])).length};
+        },caseId);
+        assert(Object.values(fidelity).every(Boolean),caseId+' fidelity '+JSON.stringify(fidelity));
         const style=await page.locator('.detail-section').first().evaluate(n=>getComputedStyle(n).borderRadius);
         assert.equal(style,'24px',caseId+' workspace style');
         await assertNoOverflow(page,theme+' '+caseId+' standard '+viewport.name);
         if(await page.locator('#medications').count())assert(await page.locator('.dose-panel').first().isVisible());
         await page.locator('[data-density-toggle]').click();
         assert.equal(await page.locator('html').getAttribute('data-density'),'compact');
+        assert.equal(await page.locator('#critical-actions').evaluate(n=>getComputedStyle(n).order),'10');
+        assert.equal(await page.locator('#algorithm').evaluate(n=>getComputedStyle(n).order),'20');
         await assertNoOverflow(page,theme+' '+caseId+' field '+viewport.name);
         await page.locator('[data-density-toggle]').click();
         await page.locator('.back-btn').click();
@@ -113,6 +123,9 @@ try{
         await page.locator('#protocolGrid [data-protocol-open="'+protocolId+'"]').click();
         assert(await page.locator('.workspace-brand').isVisible());
         assert(await page.locator('#protocol-flow').isVisible());
+        assert(await page.locator('#source').isVisible());
+        const protocolFidelity=await page.evaluate(id=>{const p=PROTOCOLS.find(x=>x.id===id);return document.querySelectorAll('#protocol-flow .protocol-flow-step').length===p.flow.filter(x=>x.type==='step').length&&document.querySelectorAll('#protocol-flow .protocol-decision').length===p.flow.filter(x=>x.type==='decision').length&&document.querySelectorAll('#protocol-flow .protocol-transition').length===p.flow.filter(x=>x.type==='transition').length},protocolId);
+        assert(protocolFidelity,protocolId+' flow fidelity');
         await assertNoOverflow(page,theme+' '+protocolId+' '+viewport.name);
         await page.locator('.back-btn').click();
         await page.locator('#mainView:not(.hidden)').waitFor();

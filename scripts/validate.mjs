@@ -7,7 +7,7 @@ const errors=[];const warnings=[];
 const err=m=>errors.push(m);const warn=m=>warnings.push(m);
 const read=f=>fs.readFileSync(path.join(root,f),'utf8');
 
-const required=['index.html','styles.css','cases-data.js','app-core.js','manifest.webmanifest','sw.js','icon.svg','icon-192.png','icon-512.png','apple-touch-icon.png'];
+const required=['index.html','saha-design.css','cases-data.js','app-core.js','manifest.webmanifest','sw.js','icon.svg','icon-192.png','icon-512.png','apple-touch-icon.png'];
 for(const f of required)if(!fs.existsSync(path.join(root,f)))err(`Eksik dosya: ${f}`);
 
 let APP_META,CASES,PROTOCOLS;
@@ -766,7 +766,7 @@ try{
 
 try{
   const sw=read('sw.js');
-  for(const f of ['index.html','styles.css','cases-data.js','app-core.js','manifest.webmanifest','icon.svg'])if(!sw.includes(`./${f}`))err(`sw.js CORE içinde eksik: ${f}`);
+  for(const f of ['index.html','saha-design.css','cases-data.js','app-core.js','manifest.webmanifest','icon.svg'])if(!sw.includes(`./${f}`))err(`sw.js CORE içinde eksik: ${f}`);
 }catch(e){err(`sw.js doğrulama hatası: ${e.message}`)}
 
 console.log(`Saha112 QA: ${CASES?.length||0} vaka, ${errors.length} hata, ${warnings.length} uyarı`);
