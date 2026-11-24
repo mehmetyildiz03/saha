@@ -42,8 +42,8 @@ assert(css.includes("/* V0.6.1 dark surface hardening */"),'Koyu mod yüzey hard
 assert(css.includes(":root[data-theme='dark'] .quick-step")&&css.includes("background:var(--detail-panel-deep)!important"),'Koyu mod algoritma adımı explicit yüzeyi eksik');
 assert(css.includes(":root[data-theme='dark'] .red-flag")&&css.includes("background:#2b202a!important"),'Koyu mod kırmızı bayrak yüzeyi eksik');
 assert(css.includes(":root[data-theme='dark'] .branch.yes")&&css.includes(":root[data-theme='dark'] .branch.no"),'Koyu mod karar kutuları explicit değil');
-assert(html.includes('styles.css?v=0.59.10')&&html.includes('app-core.js?v=2.0.0')&&html.includes('cases-data.js?v=0.59.10'),'Kritik asset cache-bust sürümü eksik');
-assert(sw.includes("saha-next-v200")&&sw.includes("CACHE_PREFIX='saha-next-'")&&sw.includes("k.startsWith(CACHE_PREFIX)&&k!==CACHE")&&sw.includes('NETWORK_FIRST_DESTINATIONS'),'Service worker güncelleme/cache izolasyon stratejisi eksik');
+assert(html.includes('styles.css?v=0.59.10')&&html.includes('app-core.js?v=2.0.1')&&html.includes('cases-data.js?v=0.59.10'),'Kritik asset cache-bust sürümü eksik');
+assert(sw.includes("saha-next-v201")&&sw.includes("CACHE_PREFIX='saha-next-'")&&sw.includes("k.startsWith(CACHE_PREFIX)&&k!==CACHE")&&sw.includes('NETWORK_FIRST_DESTINATIONS'),'Service worker güncelleme/cache izolasyon stratejisi eksik');
 assert(!app.includes('Kırmızı bayrak'),'Eski kullanıcı terimi hâlâ UI içinde');
 assert(app.includes('Acil Uyarı Bulguları'),'Acil Uyarı Bulguları başlığı eksik');
 assert(app.includes('Önceliği, müdahaleyi veya nakil kararını değiştirebilecek bulgular.'),'Acil uyarı açıklaması eksik');
@@ -71,7 +71,7 @@ assert(app.includes('sourceFocusable')&&app.includes("e.key==='Tab'")&&css.inclu
 assert(html.includes('id="searchInput" type="search" aria-label="Vaka, protokol, bulgu, ilaç veya doz ara"')&&html.includes('<kbd aria-hidden="true">⌕</kbd>'),'Arama alanı programatik etiketi/dekoratif simge semantiği eksik');
 assert(html.includes('id="populationTabs" class="population-tabs" role="group" aria-label="Hasta grubu seçimi"')&&!html.includes('id="populationTabs" class="population-tabs" role="tablist"'),'Hasta grubu seçici yanlış tablist semantiği kullanıyor');
 assert(app.includes('aria-pressed="${active}"')&&!app.includes('role="tab" aria-selected="${active}"'),'Hasta grubu düğmeleri pressed-state semantiğine bağlı değil');
-assert(app.includes("returnFocus={type:'case',id}")&&app.includes("returnFocus={type:'protocol',id}")&&app.includes("querySelector('.back-btn')?.focus({preventScroll:true})")&&app.includes("document.querySelector(selector)?.focus({preventScroll:true})"),'Detay aç/kapa klavye odağı korunmuyor');
+assert(app.includes("returnFocus={type:'case',id}")&&app.includes("returnFocus={type:'protocol',id}")&&app.includes("querySelector('.back-btn')?.focus({preventScroll:true})")&&app.includes("[...document.querySelectorAll(selector)].find(node=>node.getClientRects().length>0)?.focus({preventScroll:true})"),'Detay aç/kapa klavye odağı korunmuyor');
 assert(app.includes('case-icon" aria-hidden="true"')&&app.includes('chev" aria-hidden="true"')&&html.includes('nav-item active')&&html.includes('svg viewBox="0 0 24 24" aria-hidden="true"'),'Dekoratif vaka/navigasyon glifleri ekran okuyucudan gizlenmiyor');
 assert(app.includes("function pushDetailHistory(type,id,{nested=false}={})")&&app.includes("saha112Detail:{type,id,depth}")&&app.includes("history:'back',browserHistory:false")&&app.includes("window.history.go(-depth)")&&app.includes("addEventListener('popstate'"),'Detay/protokol zinciri tarayıcı ve Android/PWA geri geçmişiyle tutarlı değil');
 assert(app.includes('function detailModeSwitch()')&&app.includes('data-density-toggle')&&app.includes("Hızlı Saha • Olay anı")&&app.includes("Standart • Eğitim")&&app.includes("compact?'Hızlı Saha':'Standart'"),'Standart/Hızlı Saha ürün ayrımı veya aktif mod etiketi eksik');

@@ -9,11 +9,11 @@
   <meta name="apple-mobile-web-app-title" content="Saha112" />
   <meta name="description" content="Hastane öncesi acil sağlık için vaka bazlı eğitim ve hızlı hatırlatma rehberi." />
   <title>Saha112 — Vaka Rehberi</title>
-  <link rel="manifest" href="./manifest.webmanifest?v=2.0.0" />
+  <link rel="manifest" href="./manifest.webmanifest?v=2.0.1" />
   <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
   <link rel="icon" href="./icon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="./styles.css?v=0.59.10" />
-  <link rel="stylesheet" href="./saha-design.css?v=2.0.0" />
+  <link rel="stylesheet" href="./saha-design.css?v=2.0.1" />
 </head>
 <body>
 <div class="app-shell" data-page="home">
@@ -30,13 +30,13 @@
       <div class="desktop-greeting"><small>SAHA ÇALIŞMA ALANI</small><strong id="pageHeading">Keşfet</strong></div>
       <div class="top-actions">
         <button id="fieldToggle" class="icon-btn field-button" type="button" aria-label="Hızlı Saha" aria-pressed="false" title="Hızlı Saha"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m13 2-9 12h7l-1 8 10-13h-7z"/></svg><span>Hızlı Saha</span></button>
-        <button id="themeToggle" class="icon-btn theme-button" type="button" aria-label="Koyu moda geç" aria-pressed="false" title="Tema değiştir"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 15.4A8.8 8.8 0 0 1 8.6 3.2a8.8 8.8 0 1 0 12.2 12.2Z"/></svg></button>
+        <button id="themeToggle" class="icon-btn theme-button" type="button" aria-label="Koyu moda geç" aria-pressed="false" title="Tema değiştir"><svg class="saha-theme-moon" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 15.4A8.8 8.8 0 0 1 8.6 3.2a8.8 8.8 0 1 0 12.2 12.2Z"/></svg><svg class="saha-theme-sun" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v3m0 14v3M2 12h3m14 0h3M5 5l2 2m10 10 2 2M19 5l-2 2M7 17l-2 2"/></svg></button>
         <button id="sourceBtn" class="icon-btn" type="button" aria-label="Kaynaklar" aria-haspopup="dialog" aria-expanded="false" aria-controls="sourceSheet" title="Kaynaklar"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h12a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2V4Zm0 13h14M9 8h6m-6 4h6"/></svg></button>
       </div></div>
     <div class="search-wrap"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="searchInput" type="search" aria-label="Vaka, protokol, bulgu, ilaç veya doz ara" placeholder="Vaka, belirti, ilaç veya protokol ara…" autocomplete="off" /><kbd aria-hidden="true">⌕</kbd></div>
   </header>
   <div class="context-panel"><div class="population-caption">HASTA GRUBU</div><div id="populationTabs" class="population-tabs" role="group" aria-label="Hasta grubu seçimi"></div>
-    <div class="utility-row"><div class="protocol-strip"><span class="status-dot"></span><span>Ek‑2 • <strong>25.08.2026</strong></span><span class="protocol-chip" id="productVersionChip">V2.0.0</span></div><div id="networkStatus" class="status-pill" data-state="online"><span class="network-dot"></span><span>Çevrimiçi</span></div><div class="status-pill mode-pill" id="modePill" data-state="standard">Standart • Eğitim</div><div class="status-pill desktop-pill" id="themePill">Açık</div></div>
+    <div class="utility-row"><div class="protocol-strip"><span class="status-dot"></span><span>Ek‑2 • <strong>25.08.2026</strong></span><span class="protocol-chip" id="productVersionChip">V2.0.1</span></div><div id="networkStatus" class="status-pill" data-state="online"><span class="network-dot"></span><span>Çevrimiçi</span></div><div class="status-pill mode-pill" id="modePill" data-state="standard">Standart • Eğitim</div><div class="status-pill desktop-pill" id="themePill">Açık</div></div>
   </div>
   <div id="offlineBanner" class="offline-banner hidden" role="status"><strong>Çevrimdışı mod</strong><span>Vaka rehberi çalışır; resmî PDF ve dış bağlantılar internet gerektirebilir.</span></div>
   <div id="updateBanner" class="update-banner hidden" role="status" aria-live="polite"><span><strong>Yeni sürüm hazır.</strong> Son arayüz için yenile.</span><button type="button" data-action="reload-app">Yenile</button></div>
@@ -63,12 +63,12 @@
       <a class="source-link" href="https://acilafet.saglik.gov.tr/TR-119840/hastane-oncesi-acil-tibbi-yardim-ve-bakim-akis-semalari.html" target="_blank" rel="noopener">Resmî algoritma sayfasını aç <span>↗</span></a>
       <a class="source-link" href="https://dosyamerkez.saglik.gov.tr/Eklenti/55773/0/ek-2-hastane-oncesi-acil-tibbi-yardim-ve-bakim-akis-semalaripdf.pdf" target="_blank" rel="noopener">Ek‑2 PDF'yi aç <span>↗</span></a>
       <div id="authorityLegend" class="authority-legend" aria-label="Yetki işaretleri"></div>
-      <div class="source-meta"><span>Veri şeması: v5</span><span>Arayüz: 2.0.0</span><span id="sourceProductMeta">Uygulama: V0.59.10</span><span id="sourceReviewMeta">Kaynak seti son gözden geçirme: —</span></div>
+      <div class="source-meta"><span>Veri şeması: v5</span><span>Arayüz: 2.0.1</span><span id="sourceProductMeta">Uygulama: V0.59.10</span><span id="sourceReviewMeta">Kaynak seti son gözden geçirme: —</span></div>
       <p class="sheet-disclaimer">Saha112 resmî Sağlık Bakanlığı uygulaması değildir. Bu arayüz resmî kaynakların eğitim amaçlı sadeleştirilmiş hızlı erişim katmanıdır.</p>
     </section>
   </div>
 
   <script src="./cases-data.js?v=0.59.10"></script>
-  <script src="./app-core.js?v=2.0.0"></script>
+  <script src="./app-core.js?v=2.0.1"></script>
 </body>
 </html>

@@ -64,16 +64,10 @@ def png_bytes(buf,n):
 
 def build(n,path):
     s=n/512
-    b=canvas(n,NAVY)
-    rounded_rect(b,n,40*s,40*s,472*s,472*s,94*s,NAVY_2)
-    qcurve(b,n,(138*s,354*s),(138*s,260*s),(240*s,260*s),38*s,TEAL_DARK)
-    qcurve(b,n,(240*s,260*s),(366*s,260*s),(366*s,178*s),38*s,TEAL)
-    circle(b,n,138*s,354*s,29*s,WHITE); circle(b,n,138*s,354*s,13*s,TEAL_DARK)
-    circle(b,n,366*s,178*s,31*s,AMBER); circle(b,n,366*s,178*s,12*s,WHITE)
-    arc(b,n,366*s,178*s,63*s,math.radians(205),math.radians(335),13*s,WHITE)
-    arc(b,n,366*s,178*s,92*s,math.radians(210),math.radians(330),12*s,AMBER)
-    rounded_rect(b,n,220*s,346*s,354*s,370*s,12*s,WHITE)
-    rounded_rect(b,n,220*s,386*s,316*s,410*s,12*s,MUTED)
+    b=canvas(n,(25,74,59,255))
+    points=[(80,256),(185,256),(230,144),(308,368),(360,256),(432,256)]
+    for (x,y),(X,Y) in zip(points,points[1:]):
+        line(b,n,x*s,y*s,X*s,Y*s,39*s,(218,250,149,255))
     path.write_bytes(png_bytes(b,n))
 
 for size,name in [(192,'icon-192.png'),(512,'icon-512.png'),(180,'apple-touch-icon.png')]:

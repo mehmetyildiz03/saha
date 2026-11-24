@@ -90,7 +90,7 @@ function renderAuthorityLegend(){
   const aabt=practitionerMarkup('AABT',{legend:true});
   el.authorityLegend.innerHTML=`<div class="authority-legend-group"><h4>SKKM/ÇM</h4><p class="legend-note">Sarı rozet yalnız Ek-2’de SKKM/ÇM işareti bulunan doğrulanmış basamaklarda gösterilir. İşaret bulunmayan basamaklara ek SKKM/ÇM rozeti eklenmez.</p>${approval}</div><div class="authority-legend-group"><h4>Uygulayıcı kısıtı</h4><p class="legend-note">Kartlarda yalnız resmî turuncu kutu doğrulanmışsa “Yalnız AABT” gösterilir. Turkuaz “Acil Tıp Teknisyeni / Teknikeri” basamaklarında ek rozet gösterilmez. Rozet olmaması, henüz audit edilmemiş bir basamakta ATT yetkisini tek başına doğrulamaz.</p>${aabt}</div>`;
 }
-function renderAppMeta(){const version='V2.0.0';if(el.productVersionChip)el.productVersionChip.textContent=version;if(el.sourceProductMeta)el.sourceProductMeta.textContent=`Klinik kaynak uygulama: V${APP_META.productVersion}`;if(el.sourceReviewMeta)el.sourceReviewMeta.textContent=`Kaynak seti son gözden geçirme: ${formatDateTR(latestReviewDate())}`;renderAuthorityLegend()}
+function renderAppMeta(){const version='V2.0.1';if(el.productVersionChip)el.productVersionChip.textContent=version;if(el.sourceProductMeta)el.sourceProductMeta.textContent=`Klinik kaynak uygulama: V${APP_META.productVersion}`;if(el.sourceReviewMeta)el.sourceReviewMeta.textContent=`Kaynak seti son gözden geçirme: ${formatDateTR(latestReviewDate())}`;renderAuthorityLegend()}
 
 function detectTheme(){if(['light','dark'].includes(state.theme))return state.theme;return matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'}
 function applyTheme(theme){const t=theme||detectTheme();document.documentElement.dataset.theme=t;el.themeToggle?.setAttribute('aria-pressed',String(t==='dark'));el.themeToggle?.setAttribute('aria-label',t==='dark'?'Açık moda geç':'Koyu moda geç');if(el.themePill)el.themePill.textContent=t==='dark'?'Koyu':'Açık';el.themeMeta?.setAttribute('content',t==='dark'?'#111f1c':'#f5f7f3')}
@@ -359,7 +359,7 @@ function closeCase({skipHistory=false}={}){
   const shouldPop=!skipHistory&&Boolean(window.history.state?.saha112Detail);
   const returnFocus=state.returnFocus;
   state.current=null;el.detail.classList.add('hidden');el.main.classList.remove('hidden');el.shell.classList.remove('detail-open');renderAll();setNav(state.returnNav||'home');
-  requestAnimationFrame(()=>{scrollTo(0,state.returnScrollY||0);if(returnFocus){const selector=returnFocus.type==='protocol'?('[data-protocol-open="'+returnFocus.id+'"]'):('[data-open="'+returnFocus.id+'"]');document.querySelector(selector)?.focus({preventScroll:true})}});
+  requestAnimationFrame(()=>{scrollTo(0,state.returnScrollY||0);if(returnFocus){const selector=returnFocus.type==='protocol'?('[data-protocol-open="'+returnFocus.id+'"]'):('[data-open="'+returnFocus.id+'"]');[...document.querySelectorAll(selector)].find(node=>node.getClientRects().length>0)?.focus({preventScroll:true})}});
   if(shouldPop)window.history.back();
 }
 function setNav(name){state.nav=name;el.shell.dataset.page=name;const heading=$('#pageHeading');if(heading)heading.textContent=({home:'Keşfet',cases:'Kütüphane',favorites:'Kaydedilenler'})[name]||'Keşfet';$$('.nav-item').forEach(b=>{const active=b.dataset.nav===name;b.classList.toggle('active',active);if(active)b.setAttribute('aria-current','page');else b.removeAttribute('aria-current')})}

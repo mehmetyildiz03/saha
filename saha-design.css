@@ -48,3 +48,5 @@ button:focus-visible,a:focus-visible,input:focus-visible{outline:3px solid #71a5
 @media(hover:hover) and (pointer:fine){.category-tile:hover,.featured-card:hover,.case-row:hover,.protocol-card:hover,.icon-btn:hover,.hero-cta:hover,.text-btn:hover{filter:brightness(.97);transform:translateY(-2px)}}
 button:active:not(:disabled){transform:translateY(2px);box-shadow:none}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}}
+
+.theme-button .saha-theme-sun{display:none}:root[data-theme=dark] .theme-button .saha-theme-sun{display:block}:root[data-theme=dark] .theme-button .saha-theme-moon{display:none}
