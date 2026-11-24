@@ -1,0 +1,313 @@
+import fs from 'node:fs';
+
+const css=fs.readFileSync('styles.css','utf8');
+const html=fs.readFileSync('index.html','utf8');
+const sw=fs.readFileSync('sw.js','utf8');
+const app=fs.readFileSync('app-core.js','utf8');
+const data=fs.readFileSync('cases-data.js','utf8');
+const manifest=fs.readFileSync('manifest.webmanifest','utf8');
+const errors=[];
+const assert=(ok,msg)=>{if(!ok)errors.push(msg)};
+
+const hex=h=>{h=h.replace('#','');return [0,2,4].map(i=>parseInt(h.slice(i,i+2),16)/255)};
+const lum=h=>hex(h).map(c=>c<=.03928?c/12.92:((c+.055)/1.055)**2.4).reduce((s,c,i)=>s+c*[.2126,.7152,.0722][i],0);
+const contrast=(a,b)=>{const x=lum(a),y=lum(b);return (Math.max(x,y)+.05)/(Math.min(x,y)+.05)};
+
+const dark={surface:'#182331',ink:'#edf4fb',ink2:'#cbd8e4',muted:'#94a8bb',blue:'#79aaff',cyan:'#55d1d7',green:'#55c98a',amber:'#f0ba57',red:'#f1848b',violet:'#a996ff'};
+for(const key of ['ink','ink2','muted','blue','cyan','green','amber','red','violet']){
+  const ratio=contrast(dark[key],dark.surface);
+  assert(ratio>=4.5,`Dark contrast düşük: ${key} ${ratio.toFixed(2)}:1`);
+}
+const light={solid:'#ffffff',soft:'#f4f8fb',muted:'#5c7184',blue:'#386aa9',cyan:'#177584',green:'#1f7a50',amber:'#8a5f0f',red:'#aa3f48',violet:'#6652b0',greenSoft:'#e5f7ee',amberSoft:'#fff4df',redSoft:'#ffedf0',violetSoft:'#efebff'};
+for(const key of ['muted','blue','cyan']){
+  for(const bg of ['solid','soft']){
+    const ratio=contrast(light[key],light[bg]);
+    assert(ratio>=4.5,`Light contrast düşük: ${key}/${bg} ${ratio.toFixed(2)}:1`);
+  }
+}
+for(const [fg,bg] of [['green','greenSoft'],['amber','amberSoft'],['red','redSoft'],['violet','violetSoft']]){
+  const ratio=contrast(light[fg],light[bg]);
+  assert(ratio>=4.5,`Light semantic contrast düşük: ${fg}/${bg} ${ratio.toFixed(2)}:1`);
+}
+
+assert(css.includes(":root[data-theme=dark] .case-category"),'Koyu mod vaka accent metin override eksik');
+assert(css.includes("color-mix(in srgb,var(--accent) 48%,white)"),'Accent metin aydınlatma kuralı eksik');
+assert(css.includes(".first30-card")&&css.includes("border-left:4px solid var(--red)"),'İlk Kritik Adımlar vurgu kuralı eksik');
+assert(css.includes(".critical-section")&&css.includes(".decision-section")&&css.includes(".meds-section"),'Kritik bölüm hiyerarşisi eksik');
+assert(!html.includes('17 doğrulanmış yetişkin vaka'),'Hero içinde statik vaka sayısı kalmış');
+assert(html.indexOf('id="populationTabs"')>html.indexOf('</header>'),'Hasta grubu sekmeleri sticky header içinde olmamalı');
+assert(html.includes('class="library-strip"'),'Kompakt kütüphane özeti eksik');
+assert(!css.includes('.corner-arrow{'),'Dekoratif corner arrow kuralı temizlenmemiş');
+assert(css.includes("/* V0.6.1 dark surface hardening */"),'Koyu mod yüzey hardening bloğu eksik');
+assert(css.includes(":root[data-theme='dark'] .quick-step")&&css.includes("background:var(--detail-panel-deep)!important"),'Koyu mod algoritma adımı explicit yüzeyi eksik');
+assert(css.includes(":root[data-theme='dark'] .red-flag")&&css.includes("background:#2b202a!important"),'Koyu mod kırmızı bayrak yüzeyi eksik');
+assert(css.includes(":root[data-theme='dark'] .branch.yes")&&css.includes(":root[data-theme='dark'] .branch.no"),'Koyu mod karar kutuları explicit değil');
+assert(html.includes('styles.css?v=0.59.10')&&html.includes('app-core.js?v=0.59.10')&&html.includes('cases-data.js?v=0.59.10'),'Kritik asset cache-bust sürümü eksik');
+assert(sw.includes("saha112-saha-v100")&&sw.includes("CACHE_PREFIX='saha112-saha-'")&&sw.includes("k.startsWith(CACHE_PREFIX)&&k!==CACHE")&&sw.includes('NETWORK_FIRST_DESTINATIONS'),'Service worker güncelleme/cache izolasyon stratejisi eksik');
+assert(!app.includes('Kırmızı bayrak'),'Eski kullanıcı terimi hâlâ UI içinde');
+assert(app.includes('Acil Uyarı Bulguları'),'Acil Uyarı Bulguları başlığı eksik');
+assert(app.includes('Önceliği, müdahaleyi veya nakil kararını değiştirebilecek bulgular.'),'Acil uyarı açıklaması eksik');
+assert(css.includes('.app-shell.detail-open>.context-panel'),'Detay görünümünde üst bağlam paneli gizlenmiyor');
+assert(html.includes('aria-haspopup="dialog"')&&html.includes('aria-controls="sourceSheet"'),'Kaynak dialog erişilebilirlik ilişkisi eksik');
+assert(!html.includes('id="detailView" class="detail-view hidden" aria-live="polite"'),'Büyük dinamik detay ekranı aria-live ile gereksiz toplu ekran okuyucu anonsu yapıyor');
+assert(css.includes('.filter-chip,.text-btn,.protocol-branch-link,.protocol-transition.interactive{min-height:44px}'),'Filtre/metin/protokol aksiyonlarında 44px dokunma hedefi eksik');
+assert(css.includes(":root:not([data-theme='dark']) .tag")&&css.includes("color:color-mix(in srgb,var(--accent) 70%,#14212c)")&&css.includes(":root[data-theme='dark'] .tag")&&css.includes("color:color-mix(in srgb,var(--accent) 70%,white)"),'Vaka accent metinleri açık/koyu temada kontrast güvenli renge çekilmemiş');
+assert(app.includes('const safeArray=(key)=>')&&app.includes('favorites:new Set(safeArray(STORAGE.favorites))')&&app.includes('recent:safeArray(STORAGE.recent)'),'Bozuk localStorage dizi tipleri uygulama başlangıcını kırabilir');
+assert(app.includes('function priorityRank(c)')&&app.includes("state.density==='compact'"),'Hızlı Saha öncelik sıralaması eksik');
+assert(app.includes("p.status==='active'&&n>0")&&app.includes("function populationAvailable(id)")&&app.includes("p.status==='active'&&populationCount(p.id)>0")&&app.includes("disabled")&&app.includes("Yakında"),'QA-pending hasta grubu kısmi reviewed kartlarla erken açılabilir');
+assert(css.includes('/* V0.7 field workflow */')&&css.includes('/* V0.59 standard education / field-use presentation split */'),'Standart eğitim / Hızlı Saha sunum ayrımı eksik');
+assert(css.includes(":root[data-density='compact'] .dose")&&css.includes('font-size:16px')&&css.includes(":root[data-density='compact'] .meds-section{order:50}"),'Hızlı Saha doz vurgusu veya ilaç öncelik sırası eksik');
+assert(css.includes(":root[data-density='compact'] .critical-section")&&css.includes(":root[data-density='compact'] .decision-section")&&css.includes(":root[data-density='compact'] .meds-section"),'Hızlı Saha kritik bölüm vurguları eksik');
+assert(!html.includes('Saha karar desteği')&&!html.includes('Resmî akış şemalarına bağlı')&&!html.includes('Sık kullandıkların')&&!html.includes('Kritik ve sık kullanılan vakalar'),'Eski/iddialı ürün dili kullanıcı arayüzünde kaldı');
+assert(!html.includes('ilk 30 saniye')&&!app.includes('İlk 30 saniye')&&!app.includes('İlk 30 sn'),'İlk 30 saniye terminolojisi kaldı');
+assert(app.includes('İlk Kritik Adımlar')&&app.includes('criticalActions'),'İlk Kritik Adımlar modeli/UI eksik');
+assert(!app.includes('>KRİTİK<')&&app.includes('ÖNCELİKLİ'),'UI öncelik etiketi klinik KRİTİK ifadesinden ayrılmamış');
+assert(html.includes('role="group" aria-label="Vaka kategorisi filtreleri"')&&app.includes('aria-pressed='),'Kategori filtre semantiği eksik');
+assert(app.includes('routeLabel')&&app.includes('map(routeLabel)')&&data.includes('"NEB": "Nebülizasyon"'),'Nebülizasyon kullanıcı etiketi eksik');
+assert(html.includes('sourceReviewMeta')&&app.includes('latestReviewDate'),'Dinamik kaynak gözden geçirme tarihi eksik');
+assert(app.includes('PDF sayfa')&&app.includes('PDF s.'),'PDF sayfa etiketi açık değil');
+assert(html.includes('updateBanner')&&app.includes('controllerchange')&&app.includes("reload-app"),'Pasif PWA güncelleme bildirimi eksik');
+assert(app.includes('sourceFocusable')&&app.includes("e.key==='Tab'")&&css.includes('html.dialog-open'),'Kaynak dialog focus trap/scroll kilidi eksik');
+assert(html.includes('id="searchInput" type="search" aria-label="Vaka, protokol, bulgu, ilaç veya doz ara"')&&html.includes('<kbd aria-hidden="true">⌕</kbd>'),'Arama alanı programatik etiketi/dekoratif simge semantiği eksik');
+assert(html.includes('id="populationTabs" class="population-tabs" role="group" aria-label="Hasta grubu seçimi"')&&!html.includes('id="populationTabs" class="population-tabs" role="tablist"'),'Hasta grubu seçici yanlış tablist semantiği kullanıyor');
+assert(app.includes('aria-pressed="${active}"')&&!app.includes('role="tab" aria-selected="${active}"'),'Hasta grubu düğmeleri pressed-state semantiğine bağlı değil');
+assert(app.includes("returnFocus={type:'case',id}")&&app.includes("returnFocus={type:'protocol',id}")&&app.includes("querySelector('.back-btn')?.focus({preventScroll:true})")&&app.includes("document.querySelector(selector)?.focus({preventScroll:true})"),'Detay aç/kapa klavye odağı korunmuyor');
+assert(app.includes('case-icon" aria-hidden="true"')&&app.includes('chev" aria-hidden="true"')&&html.includes('nav-item active')&&html.includes('svg viewBox="0 0 24 24" aria-hidden="true"'),'Dekoratif vaka/navigasyon glifleri ekran okuyucudan gizlenmiyor');
+assert(app.includes("function pushDetailHistory(type,id,{nested=false}={})")&&app.includes("saha112Detail:{type,id,depth}")&&app.includes("history:'back',browserHistory:false")&&app.includes("window.history.go(-depth)")&&app.includes("addEventListener('popstate'"),'Detay/protokol zinciri tarayıcı ve Android/PWA geri geçmişiyle tutarlı değil');
+assert(app.includes('function detailModeSwitch()')&&app.includes('data-density-toggle')&&app.includes("Hızlı Saha • Olay anı")&&app.includes("Standart • Eğitim")&&app.includes("compact?'Hızlı Saha':'Standart'"),'Standart/Hızlı Saha ürün ayrımı veya aktif mod etiketi eksik');
+assert(app.includes('function modeContextBanner()')&&app.includes('Standart görünüm')&&app.includes('Olay anı görünümü')&&!app.includes('fieldModeBanner'),'Standart/Hızlı Saha ortak mod bilgi bandı eksik');
+assert(css.includes(":root[data-density='compact'] .first30-card{order:10}")&&css.includes(":root[data-density='compact'] #algorithm{order:20}")&&css.includes(":root[data-density='compact'] .detail-columns{order:40}")&&css.includes(":root[data-density='compact'] .meds-section{order:50}")&&css.includes(":root[data-density='compact'] #reference-points{order:60}"),'Hızlı Saha vaka bölüm öncelik sırası eksik');
+assert(css.includes(":root[data-density='compact'] .protocol-detail-body #protocol-flow{order:20}")&&css.includes(":root[data-density='compact'] .protocol-detail-body .protocol-keypoints-section{order:60}"),'Hızlı Saha temel protokol öncelik sırası eksik');
+assert(css.includes(".jump-chip.active-section:not(.mode-switch)")&&app.includes('function updateActiveDetailJump()')&&app.includes("aria-current','location'"),'Detay aktif bölüm göstergesi eksik');
+assert(app.includes('const positioned=chips.map')&&app.includes('item.top<best.top')&&app.includes('activeTop=-Infinity')&&app.includes('top>=activeTop'),'Aktif bölüm seçimi fiziksel bölüm sırasını izlemiyor');
+assert(app.includes('const scrollBefore=scrollY')&&app.includes("scrollTo({top:scrollBefore,behavior:'auto'})")&&!app.includes('scrollBy({top:anchorAfter-anchorBefore'),'Standart/Hızlı Saha değişiminde mutlak scrollY korunmuyor');
+assert(app.indexOf("['reference-points','Anahtar','']")<app.indexOf("['medications','İlaçlar','']"),'Standart görünüm jump sırası gerçek DOM sırasıyla eşleşmiyor');
+assert(css.includes(".jump-chip[data-jump='medications']{order:50}")&&css.includes(".jump-chip[data-jump='reference-points']")&&css.includes("{order:60}"),'Hızlı Saha jump sırası ilaçları Anahtar Noktalardan önce taşımıyor');
+assert(css.includes('.action-box b,.branch b,.protocol-branch b{font-size:10px}')&&css.includes('.algo-step-followup>span{font-size:10px}'),'Klinik karar/geçiş etiketleri 10px altına düşüyor');
+assert(html.includes('STANDART • EĞİTİM / REFERANS')&&html.includes('Algoritmayı öğren. Vaka anında hızla eriş.')&&html.includes('EĞİTİM + SAHA'),'Standart görünümün eğitim/referans dili eksik');
+assert(app.includes("const tabs=$$('.severity-tab')")&&app.includes("tabs.indexOf(severityTab)"),'Klinik ayrım sekmelerinin klavye Arrow/Home/End gezinmesi bozuk');
+assert(css.includes('.app-shell.detail-open .update-banner')&&!css.includes('.app-shell.detail-open~.update-banner'),'Detay ekranı PWA güncelleme banner seçicisi DOM yapısıyla eşleşmiyor');
+assert(css.includes('.source-actions a{display:flex;align-items:center;justify-content:center'),'Kaynak aksiyon bağlantıları flex hizalama modeliyle eşleşmiyor');
+assert(app.includes("const visibleQuick=Array.isArray(c.algorithmSteps)?[]:(c.quick||[])")&&app.includes("const visibleDecision=c.decisionIntegrated?[]"),'Arama görünmeyen legacy quick/decision metinlerini indeksliyor');
+assert(app.includes("const scrollBehavior=()=>prefersReducedMotion()?'auto':'smooth'")&&!app.includes("behavior:'smooth'"),'Reduced-motion tercihinde JS smooth scroll kapatılmıyor');
+assert(!html.includes('Açık vaka değişmeden kalır'),'PWA güncelleme mesajı yeniden yüklemede vaka durumunu koruduğunu yanlış vaat ediyor');
+assert(manifest.includes('"orientation": "any"'),'PWA portrait-primary ile kilitlenmiş; tablet/landscape kullanımı açık olmalı');
+assert(css.includes('.practitioner,.authority{font-size:10.5px}')&&css.includes(":root[data-density='compact'] .practitioner{font-size:10.5px}")&&css.includes('@media(max-width:390px)'),'Yetki rozetleri saha okunabilirliği için V0.59 boyutlarına çıkmamış');
+assert(css.includes('.protocol-contact-badge')&&css.includes('.protocol-contact-badge{font-size:10.5px}')&&css.includes('white-space:nowrap'),'SKKM/ÇM iletişim rozeti etkin okunabilirlik boyutu eksik');
+assert(data.includes('"title": "İnme / SVO"'),'İnme / SVO başlığı korunmamış');
+assert(data.includes('"reviewedAt": "2026-09-25"')&&data.includes('"Glikoz <60 mg/dl ve/veya hipoglisemi bulguları varsa"')&&data.includes('"Kan basıncı takibi"')&&data.includes('4,5 saat içinde trombolitik')&&data.includes('6 saat içinde endovasküler girişim'),'Y-18 yapılandırılmış inme akışı eksik');
+assert(data.includes('"transition": "DİYABETİK ACİLLER ALGORİTMASINA GİT"')&&data.includes('"notice": "Tansiyon değerleri normalin üstünde olsa da tansiyonu düşürme."'),'Y-18 mavi geçiş / gri KB uyarısı semantiği eksik');
+
+assert(data.includes('"title": "Nabızlı Taşikardi"'),'Nabızlı Taşikardi başlığı eksik');
+assert(data.includes('"contentVersion": "EK2-2026.08.25-early-adult-fidelity-reaudit-2026.09.25"'),'Yetişkin kaynak/yetki audit sürümü eksik');
+assert(html.includes('id="authorityLegend"')&&!html.includes('<span class="authority direct">Doğrudan</span>'),'Yetki legendi dinamik veri kaynağına bağlı değil');
+assert(app.includes("authorityMarkup")&&app.includes("authority-symbol")&&app.includes("m.authority==='DIRECT'?'':authorityMarkup(m.authority)")&&app.includes("◆ Sarı: SKKM/ÇM")&&!app.includes("✓ Yeşil: ek SKKM/ÇM adımı yok"),'İlaç kartında yalnız kaynakta görünür SKKM/ÇM kısıtı gösterilmeli; DIRECT rozeti kullanıcıya basılmamalı');
+assert(css.includes('.authority.direct{')&&css.includes('var(--greenSoft)')&&css.includes('.authority.skkm{')&&css.includes('var(--amberSoft)'),'Yeşil/sarı yetki renk semantiği eksik');
+assert(data.includes('"symbol": "✓"')&&data.includes('"symbol": "◆"')&&data.includes('"symbol": "•"'),'Yetki sembol metası eksik');
+assert(!/telefon simge/i.test(data),'Kullanıcıya görünen veri katmanında “telefon simgesi” geliştirici terminolojisi kalmamalı');
+assert(data.includes('SKKM/ÇM onayı ile opioid bağımlısı olmayanda'),'Y-36 resmî Anahtar Nokta onay ifadesi kaynakla eşleşmiyor');
+assert(data.includes('Evoperasyon')&&!data.includes('Evaporasyon'),'Y-23 kaynak yazımı sessizce değiştirilmiş');
+assert(data.includes('infüzyon hızı en fazla 25 mg/kg/dk'),'Y-19 resmî fenitoin infüzyon ifadesi eksik');
+assert((data.match(/"authority": "ALGORITHM"/g)||[]).length===1&&data.includes('"sourceAuthorityStatus": "KEYPOINT_NO_SYMBOL"'),'Yalnız kaynakta yetki kodlaması bulunmayan Y-40 Midazolam nötr yetkide kalmalı');
+assert(data.includes('"referenceGroups": [')&&data.includes('Verilen uyarıyı lokalize ediyor')&&data.includes('ASOS’a adli vaka')&&data.includes('ip düğüm bölgesinden değil'),'Y-38 GKS/adli resmî referans grupları eksik');
+assert(app.includes('function renderReferenceGroups(c)')&&app.includes('Resmî Anahtar Noktalar')&&app.includes("reference-points','Anahtar"),'Vaka resmî Anahtar Noktalar renderer/jump eksik');
+assert(css.includes('.case-reference-grid .protocol-keypoint-card:only-child,.case-reference-grid .protocol-keypoint-card.wide{grid-column:1/-1}')&&app.includes("group.wide?' wide':''"),'Tek/uzun resmî referans kartı yerleşimi eksik');
+assert(data.includes('IV yol açılamazsa açılana kadar 2–5 mg IM')&&data.includes('5 küçük kare >100 ms QRS')&&data.includes('8 küçük kare >160 ms QRS'),'Y-35/Y-37 kaynak-sadakati tamamlaması eksik');
+assert(data.includes('kişisel koruyucu ekipmanı tam ve eksiksiz kullan; sekresyonlarla temas etme')&&data.includes('Sekresyonlarla temas / devam eden kontaminasyon / ikincil maruziyet riski'),'Y-35 kişisel güvenlik Anahtar Noktası görünür değil');
+assert(data.includes('kas krampları, normal ya da hafif artmış vücut ısısı ve terleme')&&data.includes('normal ya da artmış vücut ısısı (<40°C)')&&data.includes('ortostatik hipotansiyon → damar yolu aç'),'Y-23 tedavi kolu klinik ayrım kriterleri görünür değil');
+assert(data.includes('"title": "Kalp Yetmezliği Bulguları"')&&data.includes('hepatojuguler reflü')&&data.includes('tüm acil hastaların %50–70’ini oluşturur')&&data.includes('hasta yatamaz, oturur pozisyonda durur')&&data.includes('venöz doluşta uzama'),'Y-14 resmî Kalp Yetmezliği Anahtar Nokta tablosu eksik');
+assert(data.includes('"title": "Hipertermi — Klinik Bulgular"')&&data.includes('Isı Yorgunluğu')&&data.includes('minimal ya da çok az terleme')&&data.includes('Evoperasyon')&&data.includes('Vücuduna soğuk ya da ılık su sıkılır ve havalandırma açılarak buharlaşması sağlanır')&&data.includes('İmmersiyon')&&data.includes('ıslak bez ya da spanç konulur'),'Y-23 resmî Hipertermi Anahtar Nokta tablosu eksik');
+assert(data.includes('Beta Bloker / Kalsiyum Kanal Blokeri — Belirtiler ve Klinik Bulgular')&&data.includes('Konuşma bozukluğu (geveleyerek konuşma)')&&data.includes('hipotansiyonda IV sıvı replasmanı')&&data.includes('Kalsiyum kanal blokerine bağlı olduğu doğrulanmışsa'),'Y-34 resmî Anahtar Nokta tablosu eksik');
+assert(data.includes('Organofosfatlar — Belirtiler ve Klinik Bulgular')&&data.includes('solunum felci')&&data.includes('Bradikardi veya taşikardi ve hipertansiyon')&&data.includes('hava yolu yönetimi ve oksijenizasyon önemlidir')&&data.includes('maksimum doz belirtilmemiştir'),'Y-35 resmî Anahtar Nokta tablosu eksik');
+assert(data.includes('Opioid Analjezikler — Belirtiler ve Klinik Bulgular')&&data.includes('barsak seslerinde azalma ve ileus')&&data.includes('Karaciğer yetmezliği ve akut böbrek yetmezliği')&&data.includes('Solunum depresyonunda ileri hava yolu yönetimi')&&data.includes('opioid bağımlısı olmayanda 0,4–2 mg'),'Y-36 resmî Anahtar Nokta tablosu eksik');
+assert((app.match(/String\(key\)\.length>4\?' long-key':''/g)||[]).length>=2&&css.includes('.case-reference-grid .protocol-keypoint-row.long-key'),'Temel protokol ve vaka Anahtar Noktalarında uzun etiket sınıfı iki rendererda da uygulanmalı');
+assert(app.includes('bağlayıcı ve kesin talimat niteliğinde olmadığını')&&app.includes('mesleki bilgi, deneyim, klinik değerlendirme')&&app.includes('yürürlükteki mevzuat'),'Ek-2 resmî kapsam/klinik değerlendirme açıklaması detay ekranında eksik');
+assert(html.includes('Ek‑2 akış şemaları bağlayıcı ve kesin talimat niteliğinde değildir'),'Ana güvenlik notunda resmî Ek-2 kapsam uyarısı eksik');
+assert(data.includes('"title": "Nöbet / Konvülziyon"'),'Nöbet resmî başlığı eksik');
+assert(data.includes('"title": "Hava Yolu Tıkanıklıkları"')&&data.includes('"title": "Astım"')&&data.includes('"title": "Bradikardi"'),'Resmî mevcut vaka başlıklarından biri eski');
+assert(data.includes('"title": "Termal Yanık"')&&data.includes('"title": "Travmalı Hastada Acil Olgu Yönetimi"'),'Yanık/travma resmî başlıkları eksik');
+assert(data.includes('"code": "SB-ASH-Y-38"')&&data.includes('"page": "67"'),'Travma Y-38/s.67 kaynak düzeltmesi eksik');
+assert(data.includes('"subtitle": "X-ABCDE • kanama • hızlı nakil"')&&data.includes('"Hayır — hava yolu açık/güvenilir değilse"')&&data.includes('"Hayır — solunum stabil değilse"')&&data.includes('"transition": "ARREST YÖNETİMİ ALGORİTMASINA GİT"')&&data.includes('"transition": "HİPOVOLEMİK ŞOK ALGORİTMASINA GİT"')&&data.includes('"transition": "KAFA TRAVMALI HASTAYA YAKLAŞIM ALGORİTMASINA GİT"')&&data.includes('Tüm giysileri yararak vücut kontrolünü tamamla; hipotermiden koru.'),'Y-38 yapılandırılmış X-ABCDE saha akışı eksik');
+assert(data.includes("oksijen desteği ile düzelmeyen, SpO₂'nin %94 altında kalması")&&data.includes('55 yaş üstü, yanık, hipotermi veya gebelik')&&(data.match(/"transition":/g)||[]).length>=6&&!data.includes('Tüm giysileri çıkararak')&&data.includes('Tüm giysileri yararak'),'Y-38 kritik travma tablosu / mavi geçiş / giysi ifadesi eksik');
+assert(data.includes('kurşun giriş yeri kesilmemeli')&&data.includes('kıyafetler tamamen çıkartılmışsa muhafaza'),'Y-38 adli vaka giysi/kurşun giriş yeri Anahtar Noktası eksik');
+assert(data.includes('Alerjen madde uzaklaştırılmalıdır')&&data.includes("%30'dan fazla düşme"),'Y-22 anafilaksi Anahtar Nokta/tanı ölçütü eksik');
+assert(data.includes('"title": "Anafilaksi Tanı Kriterleri"')&&data.includes('yaygın ürtiker')&&data.includes('şiş dudaklar, dil veya uvula')&&data.includes('hipotoni, senkop veya inkontinans')&&data.includes('%30’dan fazla düşme'),'Y-22 resmî Anafilaksi Tanı Kriterleri eksik');
+assert(data.includes('soğuk ya da ılık su sıkıp havalandırma')&&data.includes('Koltuk altı ve kasık bölgelerine'),'Y-23 pasif eksternal soğutma yöntemleri eksik');
+assert(data.includes('PVC, naylon')&&data.includes('toksik ve irritan gaz'),'Y-33 yangın dumanı toksik/irritan gaz uyarısı eksik');
+assert(data.includes('NIMV başarısızlığı')&&data.includes('inatçı kusma/aspirasyon riski'),'Y-04 KOAH ventilasyon Anahtar Noktaları eksik');
+assert(data.includes('solunum sayısı ≥30/dk')&&data.includes('SpO₂ <%90')&&data.includes('Etiyolojide anafilaksiyi göz önünde bulundur'),'Y-05 Astım ağır atak/Anahtar Nokta ayrıntıları eksik');
+assert(data.includes('ventriküler duraklama >3 sn')&&data.includes('YARIM-YARIM-YARIM')&&data.includes('4 mcg/mL'),'Y-07 Bradikardi risk/pratik infüzyon Anahtar Noktaları eksik');
+assert(data.includes('ambulans kabinini soğut')&&data.includes('Termal yanığı musluk suyu ile yıka ve kurula'),'Y-23/Y-28 ısı-soğutma/yanık müdahale Anahtar Noktaları eksik');
+assert(data.includes('(4 × yanmış VYA% × kg) / 16')&&data.includes('"page": "48–49 / 51"'),'Y-29 elektrik yanığı ortak Yanık Anahtar Nokta/formül kaynak izi eksik');
+assert(data.includes('sil → süpür → fırçala → yıka → kurula')&&data.includes('"page": "48 / 52"'),'Y-30 kimyasal yanık ortak Yanık Anahtar Nokta/kaynak izi eksik');
+assert(data.includes('günlük yeterli doz aspirin kullanmış olsa bile')&&data.includes('SpO₂ >%90 ise rutin O₂ uygulamasından kaçın'),'Y-06 AKS ASA/O₂ Anahtar Noktaları eksik');
+assert(data.includes('5–6 cm')&&data.includes('100–120/dk')&&data.includes("10 sn'den fazla ara verme")&&data.includes('ileri hava yolundan önce 30:2')&&data.includes('10 solunum/dk')&&data.includes('kardiyak tamponad')&&data.includes('toksin/terapötik bozuklukları'),'Y-09/10/11 yüksek kaliteli KPR / geri döndürülebilir nedenler eksik');
+assert(data.includes('(SKB + 2 × DKB) / 3'),'Y-13 MAP formülü eksik');
+assert(data.includes('1. derece yanıklar Parkland hesabına dahil edilmez'),'Y-28 Parkland 1. derece yanık dışlama bilgisi eksik');
+assert(data.includes('"title": "Yanık Alanı Hesaplama"')&&data.includes('Dokuzlar Kuralı')&&data.includes('Lund-Browder')&&data.includes('parmakları bitişik avuç içi')&&data.includes('yaklaşık %1’i'),'Y-28 yanık alanı hesaplama Anahtar Noktaları eksik');
+assert(data.includes('MI, KKY, disritmi')&&data.includes('üremi, hepatik nedenler'),'Y-16 Bilinç Değişikliği neden tablosu eksik');
+assert(data.includes('nabız dolgunluğu ve hızı')&&data.includes('tekrarlayan ve kontrolsüz biçimde'),'Y-20 Vertigo Anahtar Noktaları eksik');
+assert(data.includes('kulak çınlaması')&&data.includes('tükürük salgısında artma veya azalma'),'Y-31 genel zehirlenme bulgu tablosu eksik');
+assert(data.includes('kırmızı-kuru cilt')&&data.includes('şok tedavisini geciktirme'),'Y-37 TCA Anahtar Noktaları eksik');
+assert(!data.includes('"code": "Ek-2 • Travma"'),'Eski travma kaynak kodu kaldı');
+assert(!app.includes('--soft:${c.soft}')&&app.includes('--case-soft:${c.soft}')&&css.includes('var(--case-soft,var(--soft))'),'Case-local --soft tema çakışması düzeltilmemiş');
+assert(app.includes("c.severityView?.title")&&app.includes("c.severity.mild.label")&&app.includes("c.severity.moderate.label")&&app.includes("c.severity.severe.label"),'Severity UI vaka verisine bağlı değil');
+for(const id of ['koah','hypovolemic-shock','acute-heart-failure-cardiogenic-shock','altered-consciousness'])assert(data.includes(`"id": "${id}"`),`Yeni yetişkin vaka eksik: ${id}`);
+assert(data.includes('"INHALER"')&&data.includes('"INHALER": "İnhaler"'),'İnhaler yol modeli eksik');
+assert(data.includes('SpO₂ >%93'),'Astım resmî SpO2 >%93 hedefi eksik');
+assert(app.includes("if(!legend&&resolved!=='AABT')return ''")&&app.includes("resolved==='AABT'?'Yalnız AABT':a.label"),'Uygulayıcı kısıtı yalnız doğrulanmış AABT durumunda görünmeli');
+assert(app.includes('practitionerMarkup')&&app.includes('practitionerBadge')&&app.includes("m.practitionerAuthority||'UNVERIFIED'"),'Uygulayıcı yetki veri katmanı korunmalı');
+assert(css.includes('.practitioner.aabt{')&&!css.includes('.practitioner.att-aabt{')&&!css.includes('.practitioner.unverified{'),'Kartlarda yalnız AABT kısıt rozeti stili kalmalı');
+assert(data.includes('"schemaVersion": 5')&&html.includes('Veri şeması: v5'),'Veri şeması v5 temel protokol katmanına yükseltilmemiş');
+assert(data.includes('"officialLabel": "Acil Tıp Teknisyeni / Teknikeri"')&&data.includes('"officialLabel": "Acil Tıp Teknikeri"'),'Resmî uygulayıcı lejant metaları eksik');
+assert(data.includes('"adultMedicationCardsComplete": true'),'Yetişkin ilaç uygulayıcı auditi tamamlanmış olarak işaretlenmemiş');
+assert(data.includes('"medicationContentAudit": {')&&data.includes('"status": "complete"'),'Yetişkin ilaç içerik audit metası eksik');
+assert(data.includes('"name": "Ringer Laktat — rabdomiyoliz riski"')&&data.includes('"name": "IV sıvı tedavisi"')&&data.includes('"name": "Midazolam — ajite hasta (Anahtar Noktalar)"'),'Y-29/Y-40 tam audit ilaç-sıvı kartları eksik');
+assert(data.includes('"sourceAuthorityStatus": "KEYPOINT_NO_SYMBOL"')&&data.includes('"authority": "ALGORITHM"'),'Kaynakta yetki kodlaması olmayan Y-40 Midazolam nötr kalmıyor');
+assert(app.includes("step.approvalAuthority==='SKKM'?authorityMarkup('SKKM'):''")&&app.includes('action-step-badges'),'Yapılandırılmış algoritma adımlarında SKKM kısıt rozeti render edilmiyor');
+assert(css.includes('/* V0.25 full audit readability + action authority */')&&css.includes('.action-step-badges{'),'V0.25 okunabilirlik/yetki UI katmanı eksik');
+assert(css.includes('/* V0.26 real-screen mobile stabilization */')&&css.includes('-webkit-line-clamp:3')&&css.includes('.source-ribbon span:last-child{overflow-wrap:anywhere}'),'Mobil uzun başlık/kaynak şeridi stabilizasyonu eksik');
+assert(data.includes('const PROTOCOLS = [')&&data.includes('"id": "scene-management"')&&data.includes('"code": "SB-ASH-Y-01"'),'Y-01 temel protokol veri katmanı eksik');
+assert(data.includes('"id": "emergency-case-management"')&&data.includes('"code": "SB-ASH-Y-02"')&&data.includes('"keyPoints": [')&&data.includes('"id": "sample"')&&data.includes('"id": "xabcde"'),'Y-02 temel protokol/SAMPLE/XABCDE veri katmanı eksik');
+assert(app.includes('function renderProtocolKeyPoints(p)')&&app.includes('function protocolBranchLink')&&app.includes('showCaseLibraryFromProtocol'),'Y-02 hızlı hatırlatma/protokoller arası navigasyon katmanı eksik');
+assert(app.includes("state.query=e.target.value;renderProtocols();renderCases()")&&app.includes("const protocolMatch=!el.protocolSection?.classList.contains('hidden')&&el.protocols?.children.length"),'Arama kutusu temel protokolleri anlık filtrelemiyor veya protokol eşleşmesine öncelik vermiyor');
+assert(!app.includes('protocolHistory')&&app.includes("pushDetailHistory('protocol',id,{nested:true})")&&app.includes("if(window.history.state?.saha112Detail){window.history.back();return}"),'Temel protokoller arası geri navigasyon tarayıcı geçmişinden ayrışmış');
+assert(css.includes('/* V0.28 protocol sequence + key points */')&&css.includes('.protocol-keypoint-grid{')&&css.includes('.protocol-branch-link{'),'Y-02 hızlı hatırlatma/protokol geçiş stilleri eksik');
+assert(html.includes('Saha başlangıcı ve ilk değerlendirme'),'Temel Protokoller bölüm başlığı Y-01/Y-02 sırasını açıklamıyor');
+assert(html.includes('id="protocolSection"')&&html.includes('id="protocolGrid"')&&html.includes('TEMEL PROTOKOLLER'),'Temel Protokoller ana ekran bölümü eksik');
+assert(app.includes('function renderProtocols()')&&app.includes('function openProtocol(id,{history=')&&app.includes('function renderProtocolFlow(p)'),'Temel protokol render/açılış katmanı eksik');
+assert(css.includes('/* V0.27 foundational protocol layer */')&&css.includes('.protocol-flow{')&&css.includes('.protocol-decision-branches{'),'Y-01 protokol görünüm katmanı eksik');
+assert(app.includes("const protocolOpen=e.target.closest('[data-protocol-open]')"),'Temel protokol tıklama olayı eksik');
+assert(app.includes("const headerH=el.detail.querySelector('.detail-top')?.getBoundingClientRect().height||0")&&app.includes("target.getBoundingClientRect().top+scrollY-headerH-8"),'Jump hedefleri sticky başlık gerçek yüksekliğine göre kaydırılmıyor');
+assert(css.includes('font-size:12px;line-height:1.5')&&css.includes('.algo-branch-head strong{justify-self:start;font-size:13px'),'Algoritma metin okunabilirliği yükseltilmemiş');
+assert(data.includes('"name": "Adrenalin — şoklanır ritim"')&&data.includes('"name": "Adrenalin — şoklanamaz ritim"'),'Arrest Y-10/Y-11 adrenalin yolları ayrı kartlara ayrılmamış');
+assert(data.includes('"name": "%0,9 NaCl — ısı stresi"')&&data.includes('"name": "%0,9 NaCl — ısı çarpması"'),'Hipertermi sıvı dalları ayrı ilaç kartlarına ayrılmamış');
+assert(data.includes('Salbutamol tekrar dozu kutuda ayrıca sayısal olarak yazılmadığından türetilmemiştir.'),'Astım 20 dk tekrar dozu çıkarım koruması eksik');
+assert(data.includes('adrenalin infüzyonu sonrası 500 mL bolus basamağı tekrar yer alır'),'Anafilaksi ikinci NaCl 500 mL basamağı eksik');
+assert(data.includes('"actionAudit": {')&&data.includes('"algorithmSteps": [')&&data.includes('"verifiedCases": ['),'Adım bazlı uygulayıcı yetki pilot verisi eksik');
+for(const phrase of ['Ölümcül astım atağı','Asetilsalisilik asit 160–325 mg','yakın vital takibi'])assert(data.includes(phrase),`Lineer eylem yetki genişlemesi eksik: ${phrase}`);
+assert(app.includes('function renderAlgorithmSteps(c)')&&app.includes('function renderActionStep')&&app.includes('action-step-badges'),'Yapılandırılmış algoritma adımı render katmanı eksik');
+assert(css.includes('-webkit-line-clamp:2')&&css.includes('.priority-badge{flex:0 0 auto;margin-top:1px}'),'Mobil vaka listesinde uzun başlıklar iki satıra kadar görünür değil');
+assert(app.includes('Array.isArray(c.algorithmSteps)?c.algorithmSteps:'),'Branch-only yapılandırılmış algoritma boş step dizisini hızlı özetle doldurmamalı');
+assert(data.includes('"id": "rosc"')&&data.includes('"label": "Hipotansiyon — SKB <90 mmHg"')&&data.includes('"label": "Ventriküler ektopi / sürekli olmayan VT"'),'Y-12 ROSC yapılandırılmış komplikasyon kolları eksik');
+assert(data.includes('"id": "hypovolemic-shock"')&&data.includes('"label": "Hemorajik şok"')&&data.includes('"label": "Non-hemorajik şok"'),'Y-13 hemorajik/non-hemorajik yapılandırılmış dallar eksik');
+assert(data.includes('"id": "anaphylaxis"')&&data.includes('"label": "Hipoperfüzyon sürüyor"')&&data.includes('"label": "Düzelme olmuyor"'),'Y-22 Anafilaksi hipoperfüzyon/düzelmeme dalları eksik');
+assert((data.match(/"decisionIntegrated": true/g)||[]).length>=5,'Y-08/Y-09-11/Y-12/Y-13/Y-22 entegre karar işareti eksik');
+assert(app.includes("!c.decisionIntegrated")&&app.includes("detail-columns ${c.decisionIntegrated?'single':''}"),'Entegre karar vakalarında yinelenen Karar bölümü/jump gizlenmiyor');
+assert(css.includes('/* V0.30 high-priority structured flows */')&&css.includes('.detail-columns.single{grid-template-columns:minmax(0,1fr)}'),'Entegre karar tek kolon görünüm stili eksik');
+assert(app.includes('function renderAlgorithmBranch')&&app.includes('function renderAlgorithmBranches')&&app.includes('algorithmBranchSearch'),'Dallı algoritma render/arama katmanı eksik');
+assert(app.includes('function algorithmBranchLayoutClass(c)')&&!app.includes("if(c.algorithmBranchLayout==='split')layout=' split'"),'Branch layout runtime const yeniden-atama riski giderilmemiş');
+assert(app.includes('algo-precondition')&&app.includes('algo-transition')&&app.includes('step.followUp.notice')&&app.includes('renderAlgorithmNotices(c)')&&css.includes('/* V0.38 source-geometry fidelity + runtime-safe flow polish */'),'Koşul/geçiş/gri uyarı render katmanı eksik');
+assert(app.includes('function renderAlgorithmAfter(c)')&&app.includes('algo-step-followup')&&app.includes('step?.followUp?.label'),'ROSC alt geçişi / Y-11 takip dozu render-arama katmanı eksik');
+assert(data.includes('"algorithmAfter": [')&&data.includes('"label": "Arrest tekrar ederse"')&&!data.includes('"label": "Arrest tekrarı"'),'Y-12 arrest tekrarında ilgili ritim geçişi yanlış üst dal olarak kalmış');
+assert(data.includes('"followUp": {')&&data.includes('"Dirençli / tekrarlayan VF-nVT — 5. şok sonrası"'),'Y-11 3./5. şok okunabilir ayrımı eksik');
+assert(css.includes('/* V0.31 source geometry + scanability polish */')&&css.includes('.algo-step-followup{')&&css.includes('.algorithm-after-card{'),'V0.31 kaynak geometrisi okunabilirlik stilleri eksik');
+assert(data.includes('"id": "acute-heart-failure-cardiogenic-shock"')&&data.includes('"algorithmBranchLayout": "profiles"')&&data.includes('"label": "Normotansif dekompanse kalp yetmezliği"')&&data.includes('"label": "Hipertansif kalp yetmezliği"')&&data.includes('"label": "Kardiyojenik şok"'),'Y-14 üç profil yapılandırılmış akışı eksik');
+assert(app.includes("c.algorithmBranchLayout==='profiles'?' profiles'"),'Y-14 profil yerleşimi render katmanı eksik');
+assert(css.includes('/* V0.32 Y14 profile layout */')&&css.includes('.algorithm-branches.profiles')&&css.includes('grid-template-columns:repeat(3,minmax(0,1fr))'),'Y-14 profil masaüstü/tek kolon responsive stili eksik');
+assert((data.match(/"decisionIntegrated": true/g)||[]).length>=14,'Y-38 dahil entegre karar işaretleri eksik');
+assert(css.includes('.detail-jumps::after')&&css.includes('content:"›"'),'Mobil jump şeridinde devam göstergesi eksik');
+assert(css.includes('/* V0.21 branched algorithm flow */')&&css.includes('.algorithm-branches{')&&css.includes('.algo-branch-children{'),'Dallı algoritma mobil/masaüstü stilleri eksik');
+assert(css.includes('/* V0.23 branch layout hardening */')&&css.includes('.algo-depth-0>.algo-branch-children{grid-template-columns:repeat(2,minmax(0,1fr))}')&&!css.includes('.algorithm-branches{grid-template-columns:repeat(2,minmax(0,1fr))}'),'İç içe branch kolon sertleştirmesi eksik veya eski bozuk üst-seviye iki kolon kuralı kaldı');
+assert(data.includes('"verifiedBranchCases": [')&&data.includes('"label": "Stabil"')&&data.includes('"label": "Anstabil"')&&data.includes('"label": "Geniş QRS"')&&data.includes('"label": "Dar QRS"'),'Y-08 dallı algoritma verisi eksik');
+assert(data.includes('"label": "Nabız yok"')&&data.includes('"label": "Nabız var; solunum yok / gasping"')&&data.includes('"label": "Şoklanır — VF / nVT"')&&data.includes('"label": "Şoklanamaz — NEA / Asistoli"'),'Y-09/Y-10/Y-11 arrest dallı algoritma verisi eksik');
+for(const phrase of ['1. defibrilasyon','2. defibrilasyon','3. defibrilasyon','Adrenalin 1 mg IV/IO'])assert(data.includes(phrase),`Arrest dallı akış öğesi eksik: ${phrase}`);
+assert(data.includes('<strong>Vagal manevra uygula.</strong>')&&data.includes('<strong>Senkronize kardiyoversiyon:</strong>'),'Y-08 kritik dallı eylemleri eksik');
+assert(css.includes('/* V0.19 structured action authority pilot */')&&css.includes('.quick-step-restriction'),'Algoritma adımı AABT kısıt stili eksik');
+for(const medName of ['Ringer Laktat','%0,9 NaCl / Ringer Laktat','%0,9 NaCl — hipotansiyon'])assert(data.includes(`"name": "${medName}"`),`Eksik resmî sıvı ilaç kartı: ${medName}`);
+for(const medName of ['Fentanil','Amiodaron — stabil geniş QRS','Magnezyum sülfat','Adenozin','Metoprolol','Diltiazem','Midazolam','Amiodaron — kardiyoversiyon sonrası'])assert(data.includes(`"name": "${medName}"`),`Taşikardi resmî ilaç basamağı eksik: ${medName}`);
+assert(data.includes('"title": "Diyabetik Aciller"')&&data.includes('"name": "%0,9 NaCl — hiperglisemi"'),'Y-17 Diyabetik Aciller tam kapsamı eksik');
+assert(data.includes('"algorithmBranchLayout": "split"')&&data.includes('"label": "Bilinci açık"')&&data.includes('"label": "Bilinci kapalı"')&&data.includes('"label": "Hiperglisemi — Glikoz >300 mg/dl"'),'Y-17 yapılandırılmış glikoz/bilinç dalları eksik');
+assert(data.includes('"transition": "HİPOVOLEMİK ŞOK ALGORİTMASINA GİT"'),'Y-17 Hipovolemik Şok mavi geçişi eksik');
+assert(app.includes("c.algorithmBranchLayout==='split'?' split'"),'Y-17 split branch render katmanı eksik');
+assert(css.includes('/* V0.33 Y17 diabetic split flow */')&&css.includes('.algorithm-branches.split')&&css.includes('grid-template-columns:repeat(2,minmax(0,1fr))'),'Y-17 masaüstü iki kol / mobil tek kolon stili eksik');
+assert(data.includes('"title": "Nöbet / Konvülziyon"'),'Nöbet / Konvülziyon resmî başlığı eksik');
+assert(data.includes('"id": "seizure"')&&data.includes('"algorithmBranchLayout": "split"')&&data.includes('"label": "Nöbet sonlandı"')&&data.includes('"label": "Nöbet devam ediyor"')&&data.includes('"label": "İlk benzodiazepin sonrası nöbet devam ediyor"')&&data.includes('"transition": "DİYABETİK ACİLLER ALGORİTMASINA GİT"')&&data.includes('Fenitoin 20 mg/kg')&&data.includes('25 mg/kg/dk')&&data.includes('Valproik asit 40 mg/kg')&&data.includes('Levetirasetam 60 mg/kg')&&data.includes('"label": "Evet — nöbet devam ediyor"')&&data.includes('İleri hava yolu uygulaması için hazırlan.'),'Y-19 yapılandırılmış nöbet/ilaç/postiktal akışı eksik');
+assert(data.includes('Hastayı engellemeye çalışma; yaralanmayı önlemek için hastanın başının altına yastık, katlanmış battaniye vb. yerleştir.'),'Y-19 yaralanmayı önleme gri uyarısı eksik');
+for(const title of ['Ajite Hastaya Yaklaşım','Vertigo','Alerjik Reaksiyon','Hipotermide Arrest Yönetimi'])assert(data.includes(`"title": "${title}"`),`İkinci yetişkin paketinde eksik vaka: ${title}`);
+assert(data.includes('"precondition": "Vücut ısısı <35°C ve bilinç kapalı ise"')&&data.includes('"transition": "HİPOTERMİ ALGORİTMASINA GİT"')&&data.includes('"transition": "ARREST YÖNETİMİ ALGORİTMASINA GİT"')&&data.includes("vücut sıcaklığı 30°C'ye ulaşıncaya kadar defibrilasyon ertelenmelidir")&&data.includes('SKKM/ÇM ile görüşerek ECMO merkezine yönlendirmeyi düşün')&&data.includes('Aktif dış ısıtma teknikleri')&&data.includes('42–46°C')&&data.includes('40–42°C'),'Y-25 koşul/geçiş/gri uyarı/ısıtma Anahtar Noktaları eksik');
+for(const title of ['Crush Sendromu','Kafa Travmalı Hastaya Yaklaşım','Start Triyaj'])assert(data.includes(`"title": "${title}"`),`Beşinci yetişkin paketinde eksik vaka: ${title}`);
+for(const code of ['SB-ASH-Y-39','SB-ASH-Y-40','SB-ASH-Y-41'])assert(data.includes(`"code": "${code}"`),`Beşinci yetişkin paketinde eksik kod: ${code}`);
+assert(data.includes('"id": "head-trauma"')&&data.includes('"algorithmBranchLayout": "split"')&&data.includes('"label": "KŞ <60 mg/dL veya >300 mg/dL"')&&data.includes('"transition": "DİYABETİK ACİLLER ALGORİTMASINA GİT"')&&data.includes('"label": "60 mg/dL < KŞ <300 mg/dL"')&&data.includes('"transition": "NÖBET / KONVÜLZİYON ALGORİTMASINA GİT"')&&data.includes('"label": "KİBAS varsa"')&&data.includes('30–45° yukarıda olacak şekilde sevk edilmelidir'),'Y-40 yapılandırılmış glukoz/nöbet/KİBAS akışı eksik');
+assert(data.includes('"label": "Yürüyenler — YEŞİL KOD"')&&data.includes('"triageCode": "black"')&&data.includes('"triageCode": "yellow"')&&data.includes('"label": "Komutlara uymuyorsa — KIRMIZI KOD"'),'Y-41 START yapılandırılmış karar ağacı eksik');
+assert(data.includes('daha ciddi triyaj kodu verilebilir'),'Y-41 yeniden triyaj Anahtar Noktası eksik');
+assert(data.includes('sadece renk kodu işaretlenir')&&data.includes('triyaj sırasında tedavi/KPR yapılmaz')&&data.includes('tek sağlık personeli')&&data.includes('birden fazla sağlık personeli'),'Y-41 triyaj uygulama Anahtar Noktaları eksik');
+assert(data.includes('Triyaja, uygulayıcıya en yakın hastadan başlanır'),'Y-41 en yakın hastadan başlama Anahtar Noktası eksik');
+assert(data.includes('Kısmi hava yolu tıkanıklığında sırta vurma')&&data.includes('sildenafil/vardenafil/tadalafil')&&data.includes('42–46°C')&&data.includes('spinal stabilizasyon')&&data.includes('cilde yapışmış giysiyi ayırmaya çalışma'),'Y-03/Y-06/Y-24/Y-27/Y-28 tam audit Anahtar Noktalarından biri eksik');
+assert(data.includes('"id": "airway"')&&data.includes('"decisionIntegrated": true')&&data.includes('"algorithmSteps": []')&&data.includes('İğne ile krikotirotomi yap.')&&data.includes('"precondition": "Tam tıkanmada ileri hava yolu uygulamaları başarısızsa"'),'Y-03 yapılandırılmış tam tıkanma/krikotirotomi akışı eksik');
+assert((data.match(/İğne ile krikotirotomi yap\./g)||[]).length===2&&data.includes('"approvalAuthority": "SKKM"')&&data.includes('"practitionerAuthority": "AABT"'),'Y-03 krikotirotomi SKKM/AABT kaynak yetkisi görünür değil');
+assert(data.includes('bulantı-kusma ve solunum depresyonu riski nedeniyle yavaş bolus uygula'),'Y-06 fentanil bulantı-kusma/solunum depresyonu yavaş bolus Anahtar Noktası eksik');
+assert(data.includes('acil serviste uygulanmalıdır')&&data.includes('spontan solunum eforu geri dönerse')&&data.includes('>6000 mL/gün')&&data.includes('yürüyebiliyor olması crush sendromunu dışlamaz'),'Y-35/Y-36/Y-39 tam audit Anahtar Noktalarından biri eksik');
+assert(app.includes("['green','yellow','red','black'].includes(branch.triageCode)")&&css.includes('/* V0.35 START triage outcome semantics */')&&css.includes('.algo-branch.triage-green')&&css.includes('.algo-branch.triage-black'),'Y-41 START triyaj sonuç görsel semantiği eksik');
+assert(!app.includes("'severity','Şiddet'")&&app.includes("'severity','Klinik ayrım'"),'Klinik ayrım hızlı geçiş etiketi Şiddet olmamalı');
+assert(data.includes('"id": "bee"')&&data.includes('"title": "Isırma ve Sokmalar"')&&data.includes('"code": "SB-ASH-Y-26"')&&data.includes('"page": "45"')&&data.includes('"label": "Kara canlıları"')&&data.includes('"label": "Deniz canlıları"')&&data.includes('100–250 mL')&&data.includes('en az 20 dk')&&data.includes('Turnike uygulama')&&data.includes('Ezmeden ve parçalamadan çıkar'),'Y-26 Isırma ve Sokmalar resmî kapsamı eksik');
+assert(!data.includes('"code": "SB-ASH-Y-26 + SB-ASH-Y-22"')&&!data.includes('"title": "Arı Sokması"'),'Eski daraltılmış Y-26 Arı Sokması/Y-22 birleşimi kaldı');
+assert(css.includes('/* V0.8.1 touch target hardening */'),'Dokunma hedefi hardening bloğu eksik');
+for(const selector of ['.icon-btn,','.search-wrap input{','.filter-chip{','.text-btn{','.jump-chip{','.severity-tab{','.source-actions a{','.source-link{','.update-banner button{']){
+  assert(css.includes(selector),`Dokunma hedefi kuralı eksik: ${selector}`);
+}
+assert(css.includes('min-height:44px'),'44px minimum dokunma hedefi kuralı eksik');
+assert(css.includes('.source-link{display:flex;align-items:center;justify-content:space-between;min-height:44px'),'Kaynak sheet linkleri 44px dokunma yüksekliğini garanti etmiyor');
+assert(css.includes('.update-banner button{flex:0 0 auto;min-height:44px'),'Güncelleme banner butonu 44px dokunma yüksekliğini garanti etmiyor');
+assert(css.includes('min-height:100dvh')&&css.includes('max-height:88dvh')&&css.includes('overscroll-behavior:contain'),'Mobil dinamik viewport/bottom-sheet hardening eksik');
+assert(app.includes("aria-current','page'")&&app.includes("b.removeAttribute('aria-current')"),'Alt menü aktif öğesinde aria-current semantiği eksik');
+assert(app.includes('role="tabpanel"')&&app.includes('aria-labelledby="severity-tab-${level}"')&&app.includes('aria-controls="severityCard"'),'Klinik ayrım tab/tabpanel ARIA bağlantısı eksik');
+assert(app.includes("['ArrowLeft','ArrowRight','Home','End'].includes(e.key)")&&app.includes('b.tabIndex=active?0:-1'),'Klinik ayrım sekmelerinde klavye/roving tabindex desteği eksik');
+assert(app.includes('saha112Sheet:true')&&app.includes('closeSourceSheet({fromHistory:true})')&&app.includes("history.state?.saha112Sheet")&&app.includes("e.state?.saha112Sheet"),'Android/PWA kaynak sheet history geri/ileri davranışı tutarlı değil');
+assert(app.includes('const wasSearching=Boolean(state.query)')&&app.includes('state.query&&!wasSearching'),'Mobil arama her tuş vuruşunda tekrar scrollIntoView çalıştırıyor');
+assert(css.includes('/* V0.56 phone Chrome + installed PWA + tablet layout hardening */'),'V0.56 telefon/tablet responsive hardening bloğu eksik');
+assert(css.includes('@media(hover:hover) and (pointer:fine)')&&!css.includes('.case-row:hover,.featured-card:hover,.shortcut-card:hover{transform:translateY(-1px)}\n'),'Touch cihazlarda hover yükselme efekti doğrudan uygulanmamalı');
+assert(css.includes('@media(pointer:coarse)')&&css.includes('.search-wrap kbd{display:none}'),'Coarse pointer cihazlarda masaüstü arama kısayol işareti gizlenmiyor');
+assert(css.includes('.protocol-strip{flex:1 0 100%}'),'Telefon utility satırında protokol/sürüm şeridi sabit tam satıra alınmamış');
+assert(css.includes('.population-tab{flex-direction:column')&&css.includes('.source-grid,.source-actions{grid-template-columns:1fr}'),'Dar telefonda hasta grubu veya kaynak grid responsive yerleşimi eksik');
+assert(css.includes('.source-ribbon span:last-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}'),'Dar telefonda sticky kaynak şeridi gereksiz çok satıra büyüyebilir');
+assert(css.includes('@media(min-width:700px) and (max-width:819px)')&&css.includes('.featured-grid{grid-template-columns:repeat(3,minmax(0,1fr))}'),'Tablet portrede öncelikli kartlar 4 dar kolona zorlanıyor');
+
+
+try{
+  const start=app.indexOf('function renderActionStep');
+  const end=app.indexOf('function renderAlgorithmAfter');
+  assert(start>=0&&end>start,'Renderer runtime smoke fonksiyon bloğu bulunamadı');
+  if(start>=0&&end>start){
+    const source=app.slice(start,end);
+    const escSmoke=v=>String(v??'').replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+    const api=new Function('authorityMarkup','practitionerMarkup','esc',`${source}; return {renderActionStep,renderAlgorithmBranch,renderAlgorithmBranches,algorithmBranchLayoutClass,renderAlgorithmNotices};`)(
+      key=>`<i data-authority="${key}"></i>`,
+      key=>key==='AABT'?'<i data-practitioner="AABT"></i>':'',
+      escSmoke
+    );
+    assert(api.algorithmBranchLayoutClass({algorithmBranchLayout:'split'})===' split','Runtime smoke: split layout sonucu yanlış');
+    assert(api.algorithmBranchLayoutClass({algorithmBranchLayout:'profiles'})===' profiles','Runtime smoke: profiles layout sonucu yanlış');
+    assert(api.algorithmBranchLayoutClass({})==='','Runtime smoke: varsayılan layout sonucu yanlış');
+    assert(api.renderAlgorithmBranches({algorithmBranchLayout:'split',algorithmBranches:[{label:'A',steps:[{html:'x',approvalAuthority:'DIRECT',practitionerAuthority:'ATT_AABT'}]}]}).includes('algorithm-branches split'),'Runtime smoke: split render başarısız');
+    const terminal=api.renderAlgorithmBranches({algorithmBranches:[{label:'Yeşil',triageCode:'green'},{label:'Geçiş',transition:'ALGORİTMAYA GİT'}]});
+    assert(terminal.includes('triage-green')&&terminal.includes('algo-transition'),'Runtime smoke: terminal triage/transition render başarısız');
+    assert(api.renderActionStep({precondition:'Koşul',html:'Eylem',approvalAuthority:'DIRECT',practitionerAuthority:'ATT_AABT'}).includes('algo-precondition'),'Runtime smoke: precondition render başarısız');
+    const transitionStep=api.renderActionStep({html:'Eylem',approvalAuthority:'DIRECT',practitionerAuthority:'AABT',followUp:{label:'Hayır',transition:'ALGORİTMAYA GİT'}});
+    assert(transitionStep.includes('algo-step-followup')&&transitionStep.includes('algo-transition')&&transitionStep.includes('ALGORİTMAYA GİT'),'Runtime smoke: followUp transition render başarısız');
+    assert(transitionStep.indexOf('action-step-badges')>=0&&transitionStep.indexOf('action-step-badges')<transitionStep.indexOf('algo-step-followup'),'Runtime smoke: AABT/SKKM rozeti followUp koşul/geçişinin altına taşmış');
+    const noticeStep=api.renderActionStep({html:'Eylem',approvalAuthority:'DIRECT',practitionerAuthority:'ATT_AABT',followUp:{label:'Uyarı',notice:'Gri uyarı'}});
+    assert(noticeStep.includes('algo-notice')&&noticeStep.includes('Gri uyarı'),'Runtime smoke: followUp notice render başarısız');
+    assert(api.renderAlgorithmNotices({algorithmNotices:['Uyarı']}).includes('algo-notice'),'Runtime smoke: gri uyarı render başarısız');
+  }
+}catch(e){errors.push('Renderer runtime smoke: '+e.message)}
+
+console.log(`Saha112 UI audit: ${errors.length} hata`);
+for(const e of errors)console.error('ERROR '+e);
+if(errors.length)process.exit(1);
+
+assert(!app.includes("Standart eğitim görünümüne geç")&&!app.includes("Hızlı Saha olay anı görünümüne geç"),'Mod kontrolü mevcut durum yerine geçiş eylemi metni gösteriyor');
+
+assert(data.includes("Şoklanır Ritim Yönetimi VF / Nabızsız VT Anahtar Noktalar")&&data.includes("Şok Enerji Düzeyi Seçimi tablosunda örnek olarak bifazik 120–200 J"),'Kardiyak arrest şok enerjisi Anahtar Noktalar kaynak bağlamı belirsiz');
+
+assert(css.includes(".detail-top .source-ribbon{display:flex!important}")&&css.includes(":root[data-density='compact'] .detail-top .source-ribbon{display:flex!important}")&&css.includes(":root[data-density='compact'] .detail-jumps{margin-top:8px}"),'Standart/Hızlı Saha sticky header geometrisi eşit değil');
+assert(css.includes('.mode-context-banner{')&&css.includes('height:48px')&&css.includes('.field-context{display:none}')&&css.includes(":root[data-density='compact'] .standard-context{display:none}")&&css.includes(":root[data-density='compact'] .field-context{display:flex}"),'Standart/Hızlı Saha ortak bandı sabit yükseklikte değil');
+
+assert(!app.includes('• gözden geçirme ${formatDateTR(p.source.reviewedAt)}')&&!app.includes('• gözden geçirme ${formatDateTR(c.source.reviewedAt)}'),'Sticky kaynak şeridinde teknik gözden geçirme tarihi gösteriliyor');
+assert(app.includes('${esc(p.code)} • PDF s.${esc(p.page)}')&&app.includes('${esc(c.code)} • PDF s.${esc(c.page)}'),'Sticky kaynak şeridi kod + PDF sayfasını korumuyor');
+
+assert((app.match(/\$\{modeContextBanner\(\)\}/g)||[]).length===2,'Mod bilgi bandı vaka ve temel protokol detaylarının ikisinde de render edilmiyor');
+
+assert(css.lastIndexOf(":root[data-density='compact'] .detail-jumps{margin-top:8px}")>css.lastIndexOf(":root[data-density='compact'] .detail-jumps{margin-top:5px}"),'Hızlı Saha detail-jumps efektif üst boşluğu Standart ile 8px eşit değil');
+
+assert(css.includes('.detail-view{overflow-anchor:none}'),'Dinamik detay görünümünde tarayıcı scroll anchoring kapalı değil');

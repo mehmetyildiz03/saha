@@ -1,0 +1,18 @@
+import fs from 'node:fs';
+import crypto from 'node:crypto';
+import assert from 'node:assert/strict';
+const bytes=fs.readFileSync('cases-data.js');
+const gitBlob=crypto.createHash('sha1').update('blob '+bytes.length+'\0').update(bytes).digest('hex');
+assert.equal(gitBlob,'ed6f8af231e4faa434006c26ee05fcf15eb1089b','Clinical source changed');
+const html=fs.readFileSync('index.html','utf8');
+const css=fs.readFileSync('saha-design.css','utf8');
+const sw=fs.readFileSync('sw.js','utf8');
+const app=fs.readFileSync('app-core.js','utf8');
+assert(html.includes('./saha-design.css?v=1.0.0'));
+assert(sw.includes('./saha-design.css?v=1.0.0'));
+assert(sw.includes("CACHE_PREFIX='saha112-saha-'"));
+assert(app.includes("'saha112-saha:favs'"));
+assert(css.includes('prefers-reduced-motion')&&css.includes('data-theme=dark'));
+assert(html.includes('data-action="show-all"'));
+assert(html.includes('Resmî uygulama değildir'));
+console.log('PASS: clinical source byte identity, design linkage, isolated cache and storage, responsive and accessible theme hooks.');
