@@ -50,3 +50,35 @@ button:active:not(:disabled){transform:translateY(2px);box-shadow:none}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}}
 
 .theme-button .saha-theme-sun{display:none}:root[data-theme=dark] .theme-button .saha-theme-sun{display:block}:root[data-theme=dark] .theme-button .saha-theme-moon{display:none}
+
+/* V2.0.2: contain intrinsic layout sizing, not page overflow. */
+.app-shell,.topbar,.context-panel,.main-view,.detail-view,.detail-body{min-width:0;width:100%;max-width:100%}
+.app-shell{max-width:1440px}
+.detail-view{max-width:960px}
+.brand-row{min-width:0}
+.mobile-brand{min-width:0;flex:1 1 auto}
+.mobile-brand h1{white-space:nowrap}
+.top-actions{flex:0 0 auto;min-width:0}
+.top-actions .icon-btn{flex:0 0 auto}
+.protocol-grid{grid-template-columns:minmax(0,1fr)}
+.population-tabs{grid-template-columns:repeat(3,minmax(0,1fr))}
+.featured-card,.category-tile,.case-row,.shortcut-card,.protocol-card,.section-head>div{min-width:0;max-width:100%;overflow-wrap:anywhere}
+.featured-top{min-width:0;gap:4px}
+.featured-priority{white-space:normal;overflow-wrap:anywhere}
+.intro-text{min-width:0}
+.intro-art svg{height:auto}
+.search-wrap,.detail-jumps,.filter-row{min-width:0;max-width:100%}
+.detail-body>section,.detail-columns>section,.med-card,.source-grid>div{min-width:0;overflow-wrap:anywhere}
+@media(max-width:440px){
+  .field-button{width:44px;padding:0}
+  .field-button span{display:none}
+  .top-actions{gap:6px}
+  .mobile-brand h1{font-size:25px}
+  .logo-tile{width:38px;height:38px}
+  .logo-tile svg{width:29px;height:29px}
+  .bottom-nav{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .shortcut-grid{grid-template-columns:minmax(0,1fr)}
+}
+@media(max-width:345px){.topbar{padding-inline:12px}.mobile-brand{gap:6px}.mobile-brand h1{font-size:22px}.top-actions{gap:4px}}
+
+.header-version{display:block;font-size:9px;font-weight:750;line-height:1.1;letter-spacing:.02em;color:var(--sub);margin-top:4px}

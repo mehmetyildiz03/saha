@@ -23,6 +23,16 @@ const url='http://127.0.0.1:'+server.address().port+'/saha/';
 const browser=await chromium.launch({headless:true});
 const output=process.env.SAHA_SCREENSHOTS||'test-output';
 await fs.mkdir(output,{recursive:true});
+async function assertNoOverflow(page,label){
+  const diagnostic=await page.evaluate(()=>({
+    viewport:innerWidth,root:document.documentElement.scrollWidth,
+    offenders:[...document.querySelectorAll('body *')].filter(e=>{
+      const r=e.getBoundingClientRect();
+      return r.width&&r.height&&(r.right>innerWidth+1||r.left<-1)&&!e.closest('.intro-art,.detail-jumps,.filter-row');
+    }).slice(0,20).map(e=>({tag:e.tagName,id:e.id,cls:String(e.className?.baseVal??e.className),left:Math.round(e.getBoundingClientRect().left),right:Math.round(e.getBoundingClientRect().right)}))
+  }));
+  assert(diagnostic.root<=diagnostic.viewport+1,label+' horizontal overflow: '+JSON.stringify(diagnostic));
+}
 try{
   for(const viewport of [{name:'mobile',width:390,height:844},{name:'desktop',width:1280,height:900}]){
     const context=await browser.newContext({viewport:{width:viewport.width,height:viewport.height},colorScheme:'light',reducedMotion:'reduce'});
@@ -36,8 +46,8 @@ try{
     assert.equal(await page.locator('#populationTabs button:disabled').count(),2);
     assert(await page.locator('.hero-cta').isVisible());
     assert(await page.evaluate(()=>getComputedStyle(document.documentElement).getPropertyValue('--forest').trim().length>0));
-    assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Home horizontal overflow: '+viewport.name);
     await page.screenshot({path:path.join(output,viewport.name+'-home.png'),fullPage:false});
+    await assertNoOverflow(page,'Home '+viewport.name);
     await page.locator('#categoryTiles button').first().click();
     assert.equal(await page.locator('.app-shell').getAttribute('data-page'),'cases');
     assert(await page.locator('#caseList [data-open]').count()<37);
@@ -55,7 +65,7 @@ try{
     await page.locator('#detailView:not(.hidden) #algorithm').waitFor();
     assert(await page.locator('#critical-actions').isVisible());
     assert(await page.locator('#source').isVisible());
-    assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Detail horizontal overflow: '+viewport.name);
+    await assertNoOverflow(page,'Detail '+viewport.name);
     await page.screenshot({path:path.join(output,viewport.name+'-detail.png'),fullPage:false});
     await page.locator('[data-action="favorite"]').click();
     assert.equal(await page.locator('[data-action="favorite"]').getAttribute('aria-pressed'),'true');
