@@ -35,10 +35,15 @@ try{
     assert.equal(await page.locator('#protocolGrid [data-protocol-open]').count(),2);
     assert.equal(await page.locator('#populationTabs button:disabled').count(),2);
     assert(await page.locator('.hero-cta').isVisible());
-    assert(await page.evaluate(()=>getComputedStyle(document.documentElement).getPropertyValue('--saha-primary').trim().length>0));
+    assert(await page.evaluate(()=>getComputedStyle(document.documentElement).getPropertyValue('--forest').trim().length>0));
     assert(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1),'Home horizontal overflow: '+viewport.name);
     await page.screenshot({path:path.join(output,viewport.name+'-home.png'),fullPage:false});
+    await page.locator('#categoryTiles button').first().click();
+    assert.equal(await page.locator('.app-shell').getAttribute('data-page'),'cases');
+    assert(await page.locator('#caseList [data-open]').count()<37);
+    await page.locator('[data-nav="home"]').click();
     await page.locator('.hero-cta').click();
+    assert.equal(await page.locator('.app-shell').getAttribute('data-page'),'cases');
     const first=page.locator('#caseList [data-open]').first();
     const id=await first.getAttribute('data-open');
     const title=await first.locator('h4').innerText();

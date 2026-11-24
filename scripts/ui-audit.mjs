@@ -42,8 +42,8 @@ assert(css.includes("/* V0.6.1 dark surface hardening */"),'Koyu mod yüzey hard
 assert(css.includes(":root[data-theme='dark'] .quick-step")&&css.includes("background:var(--detail-panel-deep)!important"),'Koyu mod algoritma adımı explicit yüzeyi eksik');
 assert(css.includes(":root[data-theme='dark'] .red-flag")&&css.includes("background:#2b202a!important"),'Koyu mod kırmızı bayrak yüzeyi eksik');
 assert(css.includes(":root[data-theme='dark'] .branch.yes")&&css.includes(":root[data-theme='dark'] .branch.no"),'Koyu mod karar kutuları explicit değil');
-assert(html.includes('styles.css?v=0.59.10')&&html.includes('app-core.js?v=0.59.10')&&html.includes('cases-data.js?v=0.59.10'),'Kritik asset cache-bust sürümü eksik');
-assert(sw.includes("saha-next-v100")&&sw.includes("CACHE_PREFIX='saha-next-'")&&sw.includes("k.startsWith(CACHE_PREFIX)&&k!==CACHE")&&sw.includes('NETWORK_FIRST_DESTINATIONS'),'Service worker güncelleme/cache izolasyon stratejisi eksik');
+assert(html.includes('styles.css?v=0.59.10')&&html.includes('app-core.js?v=2.0.0')&&html.includes('cases-data.js?v=0.59.10'),'Kritik asset cache-bust sürümü eksik');
+assert(sw.includes("saha-next-v200")&&sw.includes("CACHE_PREFIX='saha-next-'")&&sw.includes("k.startsWith(CACHE_PREFIX)&&k!==CACHE")&&sw.includes('NETWORK_FIRST_DESTINATIONS'),'Service worker güncelleme/cache izolasyon stratejisi eksik');
 assert(!app.includes('Kırmızı bayrak'),'Eski kullanıcı terimi hâlâ UI içinde');
 assert(app.includes('Acil Uyarı Bulguları'),'Acil Uyarı Bulguları başlığı eksik');
 assert(app.includes('Önceliği, müdahaleyi veya nakil kararını değiştirebilecek bulgular.'),'Acil uyarı açıklaması eksik');
@@ -84,7 +84,7 @@ assert(app.includes('const scrollBefore=scrollY')&&app.includes("scrollTo({top:s
 assert(app.indexOf("['reference-points','Anahtar','']")<app.indexOf("['medications','İlaçlar','']"),'Standart görünüm jump sırası gerçek DOM sırasıyla eşleşmiyor');
 assert(css.includes(".jump-chip[data-jump='medications']{order:50}")&&css.includes(".jump-chip[data-jump='reference-points']")&&css.includes("{order:60}"),'Hızlı Saha jump sırası ilaçları Anahtar Noktalardan önce taşımıyor');
 assert(css.includes('.action-box b,.branch b,.protocol-branch b{font-size:10px}')&&css.includes('.algo-step-followup>span{font-size:10px}'),'Klinik karar/geçiş etiketleri 10px altına düşüyor');
-assert(html.includes('STANDART • EĞİTİM / REFERANS')&&html.includes('Algoritmayı öğren. Vaka anında hızla eriş.')&&html.includes('EĞİTİM + SAHA'),'Standart görünümün eğitim/referans dili eksik');
+assert(html.includes('EĞİTİM + SAHA')&&html.includes('Eğitim, tekrar ve hızlı erişim'),'Standart görünümün eğitim/referans dili eksik');
 assert(app.includes("const tabs=$$('.severity-tab')")&&app.includes("tabs.indexOf(severityTab)"),'Klinik ayrım sekmelerinin klavye Arrow/Home/End gezinmesi bozuk');
 assert(css.includes('.app-shell.detail-open .update-banner')&&!css.includes('.app-shell.detail-open~.update-banner'),'Detay ekranı PWA güncelleme banner seçicisi DOM yapısıyla eşleşmiyor');
 assert(css.includes('.source-actions a{display:flex;align-items:center;justify-content:center'),'Kaynak aksiyon bağlantıları flex hizalama modeliyle eşleşmiyor');
@@ -170,7 +170,7 @@ assert(css.includes('/* V0.26 real-screen mobile stabilization */')&&css.include
 assert(data.includes('const PROTOCOLS = [')&&data.includes('"id": "scene-management"')&&data.includes('"code": "SB-ASH-Y-01"'),'Y-01 temel protokol veri katmanı eksik');
 assert(data.includes('"id": "emergency-case-management"')&&data.includes('"code": "SB-ASH-Y-02"')&&data.includes('"keyPoints": [')&&data.includes('"id": "sample"')&&data.includes('"id": "xabcde"'),'Y-02 temel protokol/SAMPLE/XABCDE veri katmanı eksik');
 assert(app.includes('function renderProtocolKeyPoints(p)')&&app.includes('function protocolBranchLink')&&app.includes('showCaseLibraryFromProtocol'),'Y-02 hızlı hatırlatma/protokoller arası navigasyon katmanı eksik');
-assert(app.includes("state.query=e.target.value;renderProtocols();renderCases()")&&app.includes("const protocolMatch=!el.protocolSection?.classList.contains('hidden')&&el.protocols?.children.length"),'Arama kutusu temel protokolleri anlık filtrelemiyor veya protokol eşleşmesine öncelik vermiyor');
+assert(app.includes("state.query=e.target.value;if(state.nav==='home')")&&app.includes("else{renderProtocols();renderCases()}"),'Arama kutusu temel protokolleri anlık filtrelemiyor veya protokol eşleşmesine öncelik vermiyor');
 assert(!app.includes('protocolHistory')&&app.includes("pushDetailHistory('protocol',id,{nested:true})")&&app.includes("if(window.history.state?.saha112Detail){window.history.back();return}"),'Temel protokoller arası geri navigasyon tarayıcı geçmişinden ayrışmış');
 assert(css.includes('/* V0.28 protocol sequence + key points */')&&css.includes('.protocol-keypoint-grid{')&&css.includes('.protocol-branch-link{'),'Y-02 hızlı hatırlatma/protokol geçiş stilleri eksik');
 assert(html.includes('Saha başlangıcı ve ilk değerlendirme'),'Temel Protokoller bölüm başlığı Y-01/Y-02 sırasını açıklamıyor');
@@ -254,7 +254,7 @@ assert(app.includes("aria-current','page'")&&app.includes("b.removeAttribute('ar
 assert(app.includes('role="tabpanel"')&&app.includes('aria-labelledby="severity-tab-${level}"')&&app.includes('aria-controls="severityCard"'),'Klinik ayrım tab/tabpanel ARIA bağlantısı eksik');
 assert(app.includes("['ArrowLeft','ArrowRight','Home','End'].includes(e.key)")&&app.includes('b.tabIndex=active?0:-1'),'Klinik ayrım sekmelerinde klavye/roving tabindex desteği eksik');
 assert(app.includes('saha112Sheet:true')&&app.includes('closeSourceSheet({fromHistory:true})')&&app.includes("history.state?.saha112Sheet")&&app.includes("e.state?.saha112Sheet"),'Android/PWA kaynak sheet history geri/ileri davranışı tutarlı değil');
-assert(app.includes('const wasSearching=Boolean(state.query)')&&app.includes('state.query&&!wasSearching'),'Mobil arama her tuş vuruşunda tekrar scrollIntoView çalıştırıyor');
+assert(app.includes("showCases('Tümü',{preserveQuery:true})")&&app.includes("el.search.focus({preventScroll:true})"),'Mobil arama her tuş vuruşunda tekrar scrollIntoView çalıştırıyor');
 assert(css.includes('/* V0.56 phone Chrome + installed PWA + tablet layout hardening */'),'V0.56 telefon/tablet responsive hardening bloğu eksik');
 assert(css.includes('@media(hover:hover) and (pointer:fine)')&&!css.includes('.case-row:hover,.featured-card:hover,.shortcut-card:hover{transform:translateY(-1px)}\n'),'Touch cihazlarda hover yükselme efekti doğrudan uygulanmamalı');
 assert(css.includes('@media(pointer:coarse)')&&css.includes('.search-wrap kbd{display:none}'),'Coarse pointer cihazlarda masaüstü arama kısayol işareti gizlenmiyor');

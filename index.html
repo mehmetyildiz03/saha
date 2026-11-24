@@ -3,120 +3,58 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
-  <meta name="theme-color" content="#edf4f8" />
+  <meta name="theme-color" content="#f5f7f3" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="Saha112" />
   <meta name="description" content="Hastane öncesi acil sağlık için vaka bazlı eğitim ve hızlı hatırlatma rehberi." />
   <title>Saha112 — Vaka Rehberi</title>
-  <link rel="manifest" href="./manifest.webmanifest?v=0.59.10" />
+  <link rel="manifest" href="./manifest.webmanifest?v=2.0.0" />
   <link rel="apple-touch-icon" href="./apple-touch-icon.png" />
   <link rel="icon" href="./icon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="./styles.css?v=0.59.10" />
-  <link rel="stylesheet" href="./saha-design.css?v=1.0.0" />
+  <link rel="stylesheet" href="./saha-design.css?v=2.0.0" />
 </head>
 <body>
-  <div class="app-shell">
-    <header class="topbar">
-      <div class="brand-row">
-        <div class="brand-mark" aria-hidden="true"><img src="./icon.svg" alt="" /></div>
-        <div class="brand-copy">
-          <div class="eyebrow">HASTANE ÖNCESİ • EĞİTİM + SAHA</div>
-          <h1>Saha<span class="brand-number">112</span><span class="edition-label">YENİ</span></h1>
-          <p>Resmî akış şemaları için eğitim, tekrar ve olay anı erişim katmanı</p>
-        </div>
-        <div class="top-actions">
-          <button id="fieldToggle" class="icon-btn" type="button" aria-label="Hızlı Saha modunu aç" aria-pressed="false" title="Hızlı Saha modu">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.2 2 5 13h6l-.2 9L19 11h-6l.2-9Z"/></svg>
-          </button>
-          <button id="themeToggle" class="icon-btn" type="button" aria-label="Koyu moda geç" aria-pressed="false" title="Tema değiştir">
-            <svg class="theme-icon theme-icon-sun" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v2.2M12 18.8V21M5.64 5.64l1.56 1.56M16.8 16.8l1.56 1.56M3 12h2.2M18.8 12H21M5.64 18.36l1.56-1.56M16.8 7.2l1.56-1.56M12 16.2A4.2 4.2 0 1 0 12 7.8a4.2 4.2 0 0 0 0 8.4Z"/></svg>
-            <svg class="theme-icon theme-icon-moon" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 15.4A8.6 8.6 0 1 1 8.6 4a7 7 0 1 0 11.4 11.4Z"/></svg>
-          </button>
-          <button id="sourceBtn" class="icon-btn" type="button" aria-label="Kaynaklar" title="Kaynaklar" aria-haspopup="dialog" aria-expanded="false" aria-controls="sourceSheet">
-            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4Zm3 13h9V7a1 1 0 0 0-1-1H7v9.2A3 3 0 0 1 8 15h9v2H8a1 1 0 1 0 0 2h9"/></svg>
-          </button>
-        </div>
-      </div>
-
-      <div class="search-wrap">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m21 21-4.4-4.4m2.4-5.1a7.5 7.5 0 1 1-15 0 7.5 7.5 0 0 1 15 0Z"/></svg>
-        <input id="searchInput" type="search" aria-label="Vaka, protokol, bulgu, ilaç veya doz ara" placeholder="Vaka, protokol, bulgu, ilaç veya doz ara…" autocomplete="off" />
-        <kbd aria-hidden="true">⌕</kbd>
-      </div>
-
-    </header>
-
-    <div class="context-panel">
-      <div id="populationTabs" class="population-tabs" role="group" aria-label="Hasta grubu seçimi"></div>
-      <div class="utility-row">
-        <div class="protocol-strip"><span class="status-dot"></span><span><strong>25.08.2026</strong> Ek‑2</span><span class="protocol-chip" id="productVersionChip">V0.59.10</span></div>
-        <div id="networkStatus" class="status-pill" data-state="online"><span class="network-dot"></span><span>Çevrimiçi</span></div>
-        <div class="status-pill mode-pill" id="modePill" data-state="standard">Standart • Eğitim</div>
-        <div class="status-pill desktop-pill" id="themePill">Açık</div>
-      </div>
-    </div>
-
-    <div id="offlineBanner" class="offline-banner hidden" role="status">
-      <strong>Çevrimdışı mod</strong><span>Vaka rehberi çalışır; resmî PDF ve dış bağlantılar internet gerektirebilir.</span>
-    </div>
-
-    <div id="updateBanner" class="update-banner hidden" role="status" aria-live="polite">
-      <span><strong>Yeni sürüm hazır.</strong> Yenilediğinde son arayüz yüklenir.</span>
-      <button type="button" data-action="reload-app">Yenile</button>
-    </div>
-
-    <main id="mainView" class="main-view">
-      <section class="hero-card">
-        <div class="hero-copy">
-          <span class="hero-kicker">STANDART • EĞİTİM / REFERANS</span>
-          <h2>Algoritmayı öğren. Vaka anında hızla eriş.</h2>
-          <p>Standart görünüm; algoritma, klinik ayrım, Anahtar Noktalar ve kaynak izini birlikte sunar. Olay anında ⚡ Hızlı Saha ile eylem, karar ve dozları öne al.</p>
-          <button type="button" class="hero-cta" data-action="show-all">Vaka kütüphanesini aç <span aria-hidden="true">↗</span></button>
-          <div class="hero-badges"><span>Kaynak izli</span><span>Offline çekirdek</span><span>QA kontrollü</span></div>
-        </div>
-        <div class="hero-art" aria-hidden="true"><svg viewBox="0 0 240 180" fill="none"><circle cx="132" cy="92" r="68" stroke="white" stroke-opacity=".18"/><circle cx="132" cy="92" r="91" stroke="white" stroke-opacity=".12"/><rect x="54" y="27" width="146" height="120" rx="24" fill="white" fill-opacity=".11" stroke="white" stroke-opacity=".3"/><path d="M70 92h27l12-24 17 49 15-31 12 6h30" stroke="#92F5DC" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="185" cy="36" r="13" fill="#BDF9D8"/><path d="m179 36 4 4 8-8" stroke="#14564D" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><rect x="70" y="119" width="35" height="6" rx="3" fill="white" fill-opacity=".5"/><rect x="112" y="119" width="54" height="6" rx="3" fill="white" fill-opacity=".22"/></svg></div>
-      </section>
-
-      <section class="library-strip" aria-label="Kütüphane özeti">
-        <article class="insight-card"><span class="insight-label">Vaka</span><strong id="statCases">0</strong><p id="statCasesText">Doğrulanmış içerik</p></article>
-        <article class="insight-card"><span class="insight-label">Kategori</span><strong id="statCategories">0</strong><p>Aktif grupta</p></article>
-        <article class="insight-card"><span class="insight-label">Kaynak</span><strong>Ek‑2</strong><p>25.08.2026 yürürlük</p></article>
-      </section>
-
-      <section id="protocolSection" class="protocol-section hidden" aria-labelledby="protocolTitle">
-        <div class="section-head"><div><span class="mini-label">TEMEL PROTOKOLLER</span><h3 id="protocolTitle">Saha başlangıcı ve ilk değerlendirme</h3></div></div>
-        <div id="protocolGrid" class="protocol-grid"></div>
-      </section>
-
-      <section id="shortcutSection" class="shortcut-section hidden" aria-labelledby="shortcutTitle">
-        <div class="section-head"><div><span class="mini-label">KISAYOLLAR</span><h3 id="shortcutTitle">Favoriler ve son bakılanlar</h3></div><button id="clearRecentsBtn" class="text-btn" type="button" data-action="clear-recents">Geçmişi temizle</button></div>
-        <div id="shortcutGrid" class="shortcut-grid"></div>
-      </section>
-
-      <section id="featuredSection" aria-labelledby="quickTitle">
-        <div class="section-head"><div><span class="mini-label">ÖNCELİKLİ</span><h3 id="quickTitle">Öncelikli vakalar</h3></div><button class="text-btn" type="button" data-action="show-all">Tümünü gör</button></div>
-        <div id="featuredGrid" class="featured-grid"></div>
-      </section>
-
-      <section aria-labelledby="filterTitle">
-        <div class="section-head compact"><h3 id="filterTitle">Vaka kütüphanesi</h3><span id="caseCount" class="count-pill"></span></div>
-        <div id="filterRow" class="filter-row" role="group" aria-label="Vaka kategorisi filtreleri"></div>
-        <div id="caseList" class="case-list"></div>
-      </section>
-
-      <section class="safety-note"><div class="safety-icon">!</div><div><strong>Eğitim ve hızlı hatırlatma amacıyla.</strong><p>Resmî uygulama değildir. Güncel resmî akış şeması, yürürlükteki mevzuat, kurum talimatı, ekip yetkisi, SKKM/ÇM kararı ve hastanın klinik durumu önceliklidir. Ek‑2 akış şemaları bağlayıcı ve kesin talimat niteliğinde değildir.</p></div></section>
-    </main>
-
-    <main id="detailView" class="detail-view hidden"></main>
-
-    <nav class="bottom-nav" aria-label="Alt menü">
-      <button class="nav-item active" type="button" data-nav="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 11 9-8 9 8v9a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1v-9Z"/></svg><span>Ana sayfa</span></button>
-      <button class="nav-item" type="button" data-nav="cases"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 3h12v18H6zM9 7h6M9 11h6M9 15h4"/></svg><span>Vakalar</span></button>
-      <button class="nav-item" type="button" data-nav="favorites"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10Z"/></svg><span>Favoriler</span></button>
-    </nav>
+<div class="app-shell" data-page="home">
+  <nav class="bottom-nav" aria-label="Ana menü">
+    <div class="rail-brand"><span class="logo-tile" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h5l2-6 4 12 3-6h4"/></svg></span><div><b>saha<span>112</span></b><small>ACİL SAĞLIK REHBERİ</small></div></div>
+    <div class="rail-label">ÇALIŞMA ALANI</div>
+    <button class="nav-item active" type="button" data-nav="home" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m3 10 9-7 9 7v10h-6v-7H9v7H3z"/></svg><span>Keşfet</span></button>
+    <button class="nav-item" type="button" data-nav="cases"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg><span>Kütüphane</span></button>
+    <button class="nav-item" type="button" data-nav="favorites"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m12 3 2.8 5.7 6.3.9-4.6 4.4 1.1 6.3-5.6-3-5.6 3 1.1-6.3-4.6-4.4 6.3-.9z"/></svg><span>Kaydedilenler</span></button>
+    <div class="rail-footer"><span class="rail-live"></span><div><b>Saha 2.0</b><small>Eğitim ve referans</small></div></div>
+  </nav>
+  <header class="topbar"><div class="brand-row">
+      <div class="mobile-brand"><span class="logo-tile" aria-hidden="true"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h5l2-6 4 12 3-6h4"/></svg></span><h1>saha<span>112</span></h1></div>
+      <div class="desktop-greeting"><small>SAHA ÇALIŞMA ALANI</small><strong id="pageHeading">Keşfet</strong></div>
+      <div class="top-actions">
+        <button id="fieldToggle" class="icon-btn field-button" type="button" aria-label="Hızlı Saha" aria-pressed="false" title="Hızlı Saha"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m13 2-9 12h7l-1 8 10-13h-7z"/></svg><span>Hızlı Saha</span></button>
+        <button id="themeToggle" class="icon-btn theme-button" type="button" aria-label="Koyu moda geç" aria-pressed="false" title="Tema değiştir"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20.8 15.4A8.8 8.8 0 0 1 8.6 3.2a8.8 8.8 0 1 0 12.2 12.2Z"/></svg></button>
+        <button id="sourceBtn" class="icon-btn" type="button" aria-label="Kaynaklar" aria-haspopup="dialog" aria-expanded="false" aria-controls="sourceSheet" title="Kaynaklar"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 4h12a2 2 0 0 1 2 2v14H7a2 2 0 0 1-2-2V4Zm0 13h14M9 8h6m-6 4h6"/></svg></button>
+      </div></div>
+    <div class="search-wrap"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="searchInput" type="search" aria-label="Vaka, protokol, bulgu, ilaç veya doz ara" placeholder="Vaka, belirti, ilaç veya protokol ara…" autocomplete="off" /><kbd aria-hidden="true">⌕</kbd></div>
+  </header>
+  <div class="context-panel"><div class="population-caption">HASTA GRUBU</div><div id="populationTabs" class="population-tabs" role="group" aria-label="Hasta grubu seçimi"></div>
+    <div class="utility-row"><div class="protocol-strip"><span class="status-dot"></span><span>Ek‑2 • <strong>25.08.2026</strong></span><span class="protocol-chip" id="productVersionChip">V2.0.0</span></div><div id="networkStatus" class="status-pill" data-state="online"><span class="network-dot"></span><span>Çevrimiçi</span></div><div class="status-pill mode-pill" id="modePill" data-state="standard">Standart • Eğitim</div><div class="status-pill desktop-pill" id="themePill">Açık</div></div>
   </div>
-
+  <div id="offlineBanner" class="offline-banner hidden" role="status"><strong>Çevrimdışı mod</strong><span>Vaka rehberi çalışır; resmî PDF ve dış bağlantılar internet gerektirebilir.</span></div>
+  <div id="updateBanner" class="update-banner hidden" role="status" aria-live="polite"><span><strong>Yeni sürüm hazır.</strong> Son arayüz için yenile.</span><button type="button" data-action="reload-app">Yenile</button></div>
+  <main id="mainView" class="main-view">
+    <section class="dashboard-intro home-only">
+      <div class="intro-text"><span class="intro-label">EĞİTİM + SAHA</span><h2>Her vaka,<br>bir <em>hazırlık.</em></h2><p>Hastane öncesi acil sağlık rehberi. Eğitim, tekrar ve hızlı erişim tek bir yerde.</p><button type="button" class="hero-cta" data-action="show-all"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg><span>Kütüphaneyi keşfet</span><span aria-hidden="true">↗</span></button></div>
+      <div class="intro-art" aria-hidden="true"><svg viewBox="0 0 220 220" fill="none"><circle cx="110" cy="110" r="95" stroke="#214b3c" stroke-opacity=".14"/><circle cx="110" cy="110" r="73" stroke="#214b3c" stroke-opacity=".18" stroke-dasharray="4 6"/><rect x="53" y="52" width="114" height="116" rx="32" fill="#153f35" transform="rotate(-11 110 110)"/><rect x="66" y="64" width="96" height="95" rx="26" fill="#d8f78d" transform="rotate(10 110 110)"/><path d="M77 112h17l10-23 15 45 11-22h17" stroke="#153f35" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="173" cy="48" r="15" fill="#ffbe94"/><path d="M173 41v14m-7-7h14" stroke="#653318" stroke-width="2.5" stroke-linecap="round"/><circle cx="46" cy="164" r="12" fill="#c7baf9"/><path d="m40 164 4 4 7-8" stroke="#493e84" stroke-width="2.5" stroke-linecap="round"/></svg></div>
+    </section>
+    <section class="library-strip" aria-label="Kütüphane özeti"><article class="insight-card"><span class="insight-label">Vaka</span><strong id="statCases">0</strong><p id="statCasesText">Doğrulanmış içerik</p></article><article class="insight-card"><span class="insight-label">Kategori</span><strong id="statCategories">0</strong><p>Aktif grupta</p></article><article class="insight-card"><span class="insight-label">Kaynak</span><strong>Ek‑2</strong><p>25.08.2026</p></article></section>
+    <section id="featuredSection" class="home-only" aria-labelledby="quickTitle"><div class="section-head"><div><span class="mini-label">HIZLI ERİŞİM</span><h3 id="quickTitle">Öncelikli vakalar</h3></div><button class="text-btn" type="button" data-action="show-all">Tümü ↗</button></div><div id="featuredGrid" class="featured-grid"></div></section>
+    <section class="category-section home-only" aria-labelledby="categoryTitle"><div class="section-head"><div><span class="mini-label">KONUYA GÖRE</span><h3 id="categoryTitle">Kategorileri keşfet</h3></div></div><div id="categoryTiles" class="category-tiles"></div></section>
+    <section id="protocolSection" class="protocol-section hidden" aria-labelledby="protocolTitle"><div class="section-head"><div><span class="mini-label">TEMEL PROTOKOLLER</span><h3 id="protocolTitle">Saha başlangıcı ve ilk değerlendirme</h3></div></div><div id="protocolGrid" class="protocol-grid"></div></section>
+    <section id="shortcutSection" class="shortcut-section home-only hidden" aria-labelledby="shortcutTitle"><div class="section-head"><div><span class="mini-label">SANA ÖZEL</span><h3 id="shortcutTitle">Favoriler ve son bakılanlar</h3></div><button id="clearRecentsBtn" class="text-btn" type="button" data-action="clear-recents">Geçmişi temizle</button></div><div id="shortcutGrid" class="shortcut-grid"></div></section>
+    <section class="catalog-section" aria-labelledby="filterTitle"><div class="catalog-heading"><div><span class="mini-label">KÜTÜPHANE</span><h2 id="filterTitle">Vaka kütüphanesi</h2></div><span id="caseCount" class="count-pill"></span></div><div id="filterRow" class="filter-row" role="group" aria-label="Vaka kategorisi filtreleri"></div><div id="caseList" class="case-list"></div></section>
+    <section class="safety-note"><div class="safety-icon">!</div><div><strong>Eğitim ve hızlı hatırlatma amacıyla.</strong><p>Resmî uygulama değildir. Güncel resmî akış şeması, yürürlükteki mevzuat, kurum talimatı, ekip yetkisi, SKKM/ÇM kararı ve hastanın klinik durumu önceliklidir. Ek‑2 akış şemaları bağlayıcı ve kesin talimat niteliğinde değildir.</p></div></section>
+  </main>
+  <main id="detailView" class="detail-view hidden"></main>
+</div>
   <div id="sourceSheet" class="sheet-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="sourceTitle">
     <section class="sheet">
       <div class="sheet-handle"></div>
@@ -125,12 +63,12 @@
       <a class="source-link" href="https://acilafet.saglik.gov.tr/TR-119840/hastane-oncesi-acil-tibbi-yardim-ve-bakim-akis-semalari.html" target="_blank" rel="noopener">Resmî algoritma sayfasını aç <span>↗</span></a>
       <a class="source-link" href="https://dosyamerkez.saglik.gov.tr/Eklenti/55773/0/ek-2-hastane-oncesi-acil-tibbi-yardim-ve-bakim-akis-semalaripdf.pdf" target="_blank" rel="noopener">Ek‑2 PDF'yi aç <span>↗</span></a>
       <div id="authorityLegend" class="authority-legend" aria-label="Yetki işaretleri"></div>
-      <div class="source-meta"><span>Veri şeması: v5</span><span>Yeni arayüz: 1.0.0</span><span id="sourceProductMeta">Uygulama: V0.59.10</span><span id="sourceReviewMeta">Kaynak seti son gözden geçirme: —</span></div>
+      <div class="source-meta"><span>Veri şeması: v5</span><span>Arayüz: 2.0.0</span><span id="sourceProductMeta">Uygulama: V0.59.10</span><span id="sourceReviewMeta">Kaynak seti son gözden geçirme: —</span></div>
       <p class="sheet-disclaimer">Saha112 resmî Sağlık Bakanlığı uygulaması değildir. Bu arayüz resmî kaynakların eğitim amaçlı sadeleştirilmiş hızlı erişim katmanıdır.</p>
     </section>
   </div>
 
   <script src="./cases-data.js?v=0.59.10"></script>
-  <script src="./app-core.js?v=0.59.10"></script>
+  <script src="./app-core.js?v=2.0.0"></script>
 </body>
 </html>
