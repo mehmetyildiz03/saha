@@ -67,10 +67,49 @@ jobs:
         run: |
           mkdir _site
           cp index.html saha-design.css cases-data.js app-core.js sw.js manifest.webmanifest icon.svg icon-192.png icon-512.png apple-touch-icon.png .nojekyll _site/
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v4
+      - name: Archive Pages release
+        run: |
+          tar --dereference --hard-dereference --directory _site -cvf "$RUNNER_TEMP/artifact.tar" --exclude=.git --exclude=.github .
+          tar -tf "$RUNNER_TEMP/artifact.tar" | grep -Fx './index.html'
+      - name: Upload uniquely named Pages artifact
+        id: upload
+        uses: actions/upload-artifact@v7
         with:
-          path: _site
+          name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/artifact.tar
+          retention-days: 1
+          if-no-files-found: error
+      - name: Confirm artifact is visible through REST
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EXPECTED_ID: ${{ steps.upload.outputs.artifact-id }}
+          ARTIFACT_NAME: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          for attempt in $(seq 1 20); do
+            if gh api "repos/$GITHUB_REPOSITORY/actions/artifacts/$EXPECTED_ID" --jq '.name' | grep -Fx "$ARTIFACT_NAME" &&
+              gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/artifacts?per_page=100" --jq ".artifacts | map(select(.name == \"$ARTIFACT_NAME\" and .expired == false)) | length" | grep -Fx 1; then
+              echo "Verified unique artifact $EXPECTED_ID ($ARTIFACT_NAME)"
+              exit 0
+            fi
+            sleep 3
+          done
+          echo "::error::Pages artifact not visible or not unique"
+          exit 1
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
+        with:
+          artifact_name: github-pages-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Verify live release
+        env:
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+        run: |
+          for attempt in $(seq 1 20); do
+            if curl -fsSL --max-time 15 -H 'Cache-Control: no-cache' "${PAGE_URL%/}/?release=$GITHUB_SHA-$attempt" | grep -F 'Saha112 — V3.0.1'; then
+              echo "Live release confirmed: V3.0.1"
+              exit 0
+            fi
+            sleep 3
+          done
+          echo "::error::Live version could not be confirmed"
+          exit 1
